@@ -4,14 +4,16 @@ using UnityEngine;
 
 public class PopulationController : MonoBehaviour
 {
-    List<GeneticPathFinder> population= new List<GeneticPathFinder>();
+    List<GeneticPathFinder> population = new List<GeneticPathFinder>();
     public GameObject creaturePrefab;
     public int populationSize = 100;
     public int genomeLenght;
     public float cutoff = 0.3f;
-
+    [Range(0f, 1f)] public float mutationRate;
     public Transform spawnPoint;
     public Transform end;
+
+    public int survivorKeep = 5;
 
     private void Start()
     {
@@ -52,15 +54,23 @@ public class PopulationController : MonoBehaviour
         }
         population.Clear();
 
-        while(population.Count < populationSize)
+        for (int i = 0; i < survivorKeep; i++)
+        {
+            GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
+            GeneticPathFinder geneticPathFinder = go.GetComponent<GeneticPathFinder>();
+            geneticPathFinder.InitCreature(survivors[i].dna, end.position);
+            population.Add(geneticPathFinder);
+        }
+
+        while (population.Count < populationSize)
         {
             for (int i = 0; i < survivorCut; i++)
             {
                 GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
                 GeneticPathFinder geneticPathFinder = go.GetComponent<GeneticPathFinder>();
-                geneticPathFinder.InitCreature(new DNA(survivors[i].dna, survivors[Random.Range(0, 10)].dna), end.position);
+                geneticPathFinder.InitCreature(new DNA(survivors[i].dna, survivors[Random.Range(0, 10)].dna, mutationRate), end.position);
                 population.Add(geneticPathFinder);
-                if(population.Count >= populationSize)
+                if (population.Count >= populationSize)
                 {
                     break;
                 }
@@ -79,7 +89,7 @@ public class PopulationController : MonoBehaviour
         int index = 0;
         for (int i = 0; i < population.Count; i++)
         {
-            if(population[i].fitness > maxFitness)
+            if (population[i].fitness > maxFitness)
             {
                 maxFitness = population[i].fitness;
                 index = i;
