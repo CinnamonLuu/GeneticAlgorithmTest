@@ -2,23 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class GeneticPathFinder : MonoBehaviour
 {
-    [SerializeField]
-    float creatureSpeed;
+    float creatureSpeed = 20;
 
-    public float pathMultiplier;
+    public float pathMultiplier = 0.5f;
     int pathIndex = 0;
 
-    public float rotationSpeed;
-
-    public LayerMask obstacleLayer;
+    public float rotationSpeed = 180;
+    public LayerMask obstacleLayer = 1 << 6;
 
     public DNA dna;
     public bool hasFinished = false;
     bool hasBeenInitialized = false;
     bool hasCrashed = false;
-    Vector2 target;
+    protected Vector2 target;
     Quaternion targetRotation;
     Vector2 nextPoint;
 
@@ -88,7 +87,8 @@ public class GeneticPathFinder : MonoBehaviour
     {
         get
         {
-            float dist = Vector2.Distance(transform.position, target);
+            float dist = CalculateDistance();
+            //float dist = Vector2.Distance(transform.position, target);
             if (dist == 0)
             {
                 dist = 0.00001f;
@@ -96,6 +96,8 @@ public class GeneticPathFinder : MonoBehaviour
             RaycastHit2D[] obstacles = Physics2D.RaycastAll(transform.position, target, obstacleLayer);
             float obstacleMultiplier = 1f - (0.1f * obstacles.Length);
             return 60 / dist * (hasCrashed ? 0.65f : 1f) * obstacleMultiplier;
+            //float score = 60 / dist * (hasCrashed ? 0.65f : 1f) * obstacleMultiplier;
+            //return (Mathf.Pow(2, score) - 1) / (2 - 1);
         }
     }
 
@@ -113,5 +115,10 @@ public class GeneticPathFinder : MonoBehaviour
             hasFinished = true;
             hasCrashed = true;
         }
+    }
+
+    protected virtual float CalculateDistance()
+    {
+        return 0;
     }
 }

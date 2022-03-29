@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7648355899434300133}
   - component: {fileID: 7648355899434300132}
-  - component: {fileID: 7648355899434300131}
   - component: {fileID: 6471747066381592254}
   - component: {fileID: 7071318487106310883}
   m_Layer: 0
@@ -85,25 +84,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &7648355899434300131
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7648355899434300130}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 051ae18360c0b2a4da6f72f89b07263f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  creatureSpeed: 20
-  pathMultiplier: 0.5
-  rotationSpeed: 180
-  obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 64
-  hasFinished: 0
 --- !u!120 &6471747066381592254
 LineRenderer:
   m_ObjectHideFlags: 0
