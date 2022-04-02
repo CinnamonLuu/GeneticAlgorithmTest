@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+
 public enum TypeOfDistance
 {
     Manhattan,
@@ -21,6 +23,13 @@ public class PopulationController : MonoBehaviour
     public Transform spawnPoint;
     public Transform end;
 
+    private int iterationCounter = 0;
+    private int arrived = 0;
+    private int noArrived = 100;
+    private int firstArrivedIteration=0;
+    public AlgorithmUIUpdater uiUpdater;
+
+    private string Ratio => (int)(((float)arrived / (float)populationSize) * 100)+"%";
 
     public int survivorKeep = 5;
 
@@ -58,7 +67,7 @@ public class PopulationController : MonoBehaviour
                     geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
                     break;
             }
-
+            geneticPathFinder.finished += IncreseArrived;
             geneticPathFinder.InitCreature(new DNA(genomeLenght), end.position);
             population.Add(geneticPathFinder);
         }
@@ -90,6 +99,11 @@ public class PopulationController : MonoBehaviour
     {
         int survivorCut = Mathf.RoundToInt(populationSize * cutoff);
         List<GeneticPathFinder> survivors = new List<GeneticPathFinder>();
+        uiUpdater.RatioNumber = Ratio;
+        arrived = 0;
+        noArrived = populationSize;
+        uiUpdater.ArrivedNumber = arrived.ToString();
+        uiUpdater.NoArrivedNumber = noArrived.ToString();
 
         for (int i = 0; i < survivorCut; i++)
         {
@@ -97,6 +111,7 @@ public class PopulationController : MonoBehaviour
         }
         for (int i = 0; i < population.Count; i++)
         {
+            population[i].finished -= IncreseArrived;
             Destroy(population[i].gameObject);
         }
         population.Clear();
@@ -131,6 +146,7 @@ public class PopulationController : MonoBehaviour
             //    lr.startColor = Color.blue;
             //    lr.endColor = Color.blue;
             //}
+            geneticPathFinder.finished += IncreseArrived;
             geneticPathFinder.InitCreature(survivors[i].dna, end.position);
             population.Add(geneticPathFinder);
         }
@@ -167,6 +183,7 @@ public class PopulationController : MonoBehaviour
                 //    lr.startColor = Color.blue;
                 //    lr.endColor = Color.blue;
                 //}
+                geneticPathFinder.finished += IncreseArrived;
                 geneticPathFinder.InitCreature(new DNA(survivors[i].dna, survivors[UnityEngine.Random.Range(0, 10)].dna, mutationRate), end.position);
                 population.Add(geneticPathFinder);
                 if (population.Count >= populationSize)
@@ -178,7 +195,29 @@ public class PopulationController : MonoBehaviour
 
         for (int i = 0; i < survivors.Count; i++)
         {
+            survivors[i].finished -= IncreseArrived;
             Destroy(survivors[i].gameObject);
+        }
+
+        IncrementCounter();
+    }
+
+    public void IncrementCounter()
+    {
+        iterationCounter++;
+        uiUpdater.IterationNumber = iterationCounter.ToString();
+    }
+
+    private void IncreseArrived()
+    {
+        arrived++;
+        noArrived--;
+        uiUpdater.ArrivedNumber = arrived.ToString();
+        uiUpdater.NoArrivedNumber = noArrived.ToString();
+        if (firstArrivedIteration == 0)
+        {
+            firstArrivedIteration = iterationCounter;
+            uiUpdater.FirstArrivedIteration = iterationCounter.ToString();
         }
     }
 

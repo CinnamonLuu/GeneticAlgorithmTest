@@ -309,6 +309,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8013411837938226517}
   - component: {fileID: 8013411837938226516}
+  - component: {fileID: 431571322831982598}
   m_Layer: 0
   m_Name: PopulationController
   m_TagString: Untagged
@@ -347,11 +348,30 @@ MonoBehaviour:
   creaturePrefab: {fileID: 7648355899434300130, guid: 53771c30983fb504d85e28d12a006690, type: 3}
   populationSize: 100
   genomeLenght: 70
+  type: 0
   cutoff: 0.3
   mutationRate: 0.05
   spawnPoint: {fileID: 8013411838070799846}
   end: {fileID: 8013411838326769423}
+  uiUpdater: {fileID: 0}
   survivorKeep: 5
+--- !u!114 &431571322831982598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8013411837938226475}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42814f246656ad84f9f380bcba1c0097, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  iterationNumber: {fileID: 0}
+  arrivedNumber: {fileID: 0}
+  noArrivedNumber: {fileID: 0}
+  ratioNumber: {fileID: 0}
+  firstArrivedIteration: {fileID: 0}
 --- !u!1 &8013411837979512802
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -24,6 +25,8 @@ public class GeneticPathFinder : MonoBehaviour
     List<Vector2> travelledPath = new List<Vector2>();
     LineRenderer lr;
 
+    public Action finished;
+
     public void InitCreature(DNA newDna, Vector2 target)
     {
         travelledPath.Add(transform.position);
@@ -39,9 +42,14 @@ public class GeneticPathFinder : MonoBehaviour
     {
         if (hasBeenInitialized && !hasFinished)
         {
-            if (pathIndex == dna.genes.Count || Vector2.Distance(transform.position, target) < 0.5f)
+            if (pathIndex == dna.genes.Count)
             {
                 hasFinished = true;
+            }
+            if(Vector2.Distance(transform.position, target) < 0.5f)
+            {
+                hasFinished = true;
+                finished?.Invoke();
             }
             if ((Vector2)transform.position == nextPoint)
             {
