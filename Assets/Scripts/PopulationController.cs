@@ -25,6 +25,7 @@ public class PopulationController : MonoBehaviour
 
     private int iterationCounter = 0;
     private int arrived = 0;
+    private int crashed = 0;
     private int noArrived = 100;
     private int firstArrivedIteration = 0;
     public AlgorithmUIUpdater uiUpdater;
@@ -70,6 +71,7 @@ public class PopulationController : MonoBehaviour
                     break;
             }
             geneticPathFinder.finished += IncreseArrived;
+            geneticPathFinder.crashed += IncreseCrashed;
             geneticPathFinder.InitCreature(new DNA(genomeLenght), end.position);
             population.Add(geneticPathFinder);
         }
@@ -104,6 +106,7 @@ public class PopulationController : MonoBehaviour
         uiUpdater.RatioNumber = Ratio;
 
         arrived = 0;
+        crashed = 0;
         noArrived = populationSize;
         uiUpdater.ArrivedNumber = arrived.ToString();
         uiUpdater.NoArrivedNumber = noArrived.ToString();
@@ -115,6 +118,7 @@ public class PopulationController : MonoBehaviour
         for (int i = 0; i < population.Count; i++)
         {
             population[i].finished -= IncreseArrived;
+            population[i].crashed -= IncreseCrashed;
             Destroy(population[i].gameObject);
         }
         population.Clear();
@@ -150,6 +154,7 @@ public class PopulationController : MonoBehaviour
             //    lr.endColor = Color.blue;
             //}
             geneticPathFinder.finished += IncreseArrived;
+            geneticPathFinder.crashed += IncreseCrashed;
             geneticPathFinder.InitCreature(survivors[i].dna, end.position);
             population.Add(geneticPathFinder);
         }
@@ -187,6 +192,7 @@ public class PopulationController : MonoBehaviour
                 //    lr.endColor = Color.blue;
                 //}
                 geneticPathFinder.finished += IncreseArrived;
+                geneticPathFinder.crashed += IncreseCrashed;
                 geneticPathFinder.InitCreature(new DNA(survivors[i].dna, survivors[UnityEngine.Random.Range(0, 10)].dna, mutationRate), end.position);
                 population.Add(geneticPathFinder);
                 if (population.Count >= populationSize)
@@ -200,6 +206,7 @@ public class PopulationController : MonoBehaviour
         for (int i = 0; i < survivors.Count; i++)
         {
             survivors[i].finished -= IncreseArrived;
+            survivors[i].crashed -= IncreseCrashed;
             Destroy(survivors[i].gameObject);
         }
 
@@ -225,6 +232,12 @@ public class PopulationController : MonoBehaviour
             firstArrivedIteration = iterationCounter;
             uiUpdater.FirstArrivedIteration = iterationCounter.ToString();
         }
+    }
+    private void IncreseCrashed()
+    {
+        crashed++;
+        noArrived--;
+        uiUpdater.NoArrivedNumber = noArrived.ToString();
     }
 
     GeneticPathFinder GetFittest()

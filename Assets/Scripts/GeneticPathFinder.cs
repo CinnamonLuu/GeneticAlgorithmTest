@@ -26,6 +26,7 @@ public class GeneticPathFinder : MonoBehaviour
     LineRenderer lr;
 
     public Action finished;
+    public Action crashed;
 
     public void InitCreature(DNA newDna, Vector2 target)
     {
@@ -122,6 +123,7 @@ public class GeneticPathFinder : MonoBehaviour
         {
             hasFinished = true;
             hasCrashed = true;
+            crashed?.Invoke();
         }
     }
 
