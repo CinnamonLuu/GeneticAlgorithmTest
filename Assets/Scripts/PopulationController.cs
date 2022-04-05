@@ -26,10 +26,10 @@ public class PopulationController : MonoBehaviour
     private int iterationCounter = 0;
     private int arrived = 0;
     private int noArrived = 100;
-    private int firstArrivedIteration=0;
+    private int firstArrivedIteration = 0;
     public AlgorithmUIUpdater uiUpdater;
 
-    private string Ratio => (int)(((float)arrived / (float)populationSize) * 100)+"%";
+    private string Ratio => (int)(((float)arrived / (float)populationSize) * 100) + "%";
 
     public int survivorKeep = 5;
 
@@ -42,6 +42,8 @@ public class PopulationController : MonoBehaviour
     {
         if (!HasActive())
         {
+            SimulationDatabase.AddIteration(iterationCounter, populationSize, arrived, noArrived);
+
             NextGeneration();
         }
     }
@@ -100,6 +102,7 @@ public class PopulationController : MonoBehaviour
         int survivorCut = Mathf.RoundToInt(populationSize * cutoff);
         List<GeneticPathFinder> survivors = new List<GeneticPathFinder>();
         uiUpdater.RatioNumber = Ratio;
+
         arrived = 0;
         noArrived = populationSize;
         uiUpdater.ArrivedNumber = arrived.ToString();
@@ -193,6 +196,7 @@ public class PopulationController : MonoBehaviour
             }
         }
 
+
         for (int i = 0; i < survivors.Count; i++)
         {
             survivors[i].finished -= IncreseArrived;
@@ -200,6 +204,8 @@ public class PopulationController : MonoBehaviour
         }
 
         IncrementCounter();
+
+
     }
 
     public void IncrementCounter()
