@@ -69,7 +69,7 @@ public class PopulationController : MonoBehaviour
     {
         if (!HasActive())
         {
-            SimulationDatabase.AddIteration(iterationCounter, populationSize, arrived, noArrived);
+            SimulationDatabase.AddIteration(type,iterationCounter, populationSize, arrived, crashed);
 
             NextGeneration();
         }
