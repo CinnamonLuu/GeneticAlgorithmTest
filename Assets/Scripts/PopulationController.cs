@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,6 +31,31 @@ public class PopulationController : MonoBehaviour
     private int firstArrivedIteration = 0;
     public AlgorithmUIUpdater uiUpdater;
 
+
+    public int Arrived
+    {
+        set
+        {
+            arrived = value;
+            uiUpdater.ArrivedNumber = arrived.ToString();
+        }
+        get
+        {
+            return arrived;
+        }
+    }
+    public int NoArrived
+    {
+        set
+        {
+            noArrived = value;
+            uiUpdater.NoArrivedNumber = noArrived.ToString();
+        }
+        get
+        {
+            return noArrived;
+        }
+    }
     private string Ratio => (int)(((float)arrived / (float)populationSize) * 100) + "%";
 
     public int survivorKeep = 5;
@@ -75,28 +101,6 @@ public class PopulationController : MonoBehaviour
             geneticPathFinder.InitCreature(new DNA(genomeLenght), end.position);
             population.Add(geneticPathFinder);
         }
-        //for (int i = 0; i < packsToSpawn.Length; i++)
-        //{
-        //    for (int j = 0; j < packsToSpawn[i].numberOfAgents; j++)
-        //    {
-        //        GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
-        //        LineRenderer lr = go.GetComponent<LineRenderer>();
-        //        if (packsToSpawn[i].type == TypeOfDistance.Manhattan)
-        //        {
-        //            lr.startColor = Color.red;
-        //            lr.endColor = Color.red;
-        //        }
-        //        else
-        //        {
-        //            lr.startColor = Color.blue;
-        //            lr.endColor = Color.blue;
-        //        }
-        //        GeneticPathFinder geneticPathFinder = go.GetComponent<GeneticPathFinder>();
-        //        geneticPathFinder.type = packsToSpawn[i].type;
-        //        geneticPathFinder.InitCreature(new DNA(genomeLenght), end.position);
-        //        population.Add(geneticPathFinder);
-        //    }
-        //}
     }
 
     void NextGeneration()
@@ -104,29 +108,24 @@ public class PopulationController : MonoBehaviour
         int survivorCut = Mathf.RoundToInt(populationSize * cutoff);
         List<GeneticPathFinder> survivors = new List<GeneticPathFinder>();
         uiUpdater.RatioNumber = Ratio;
-
-        arrived = 0;
+        Arrived = 0;
         crashed = 0;
-        noArrived = populationSize;
-        uiUpdater.ArrivedNumber = arrived.ToString();
-        uiUpdater.NoArrivedNumber = noArrived.ToString();
+        NoArrived = populationSize;
+
+        population = population.OrderByDescending(o => o.fitness).ToList();
 
         for (int i = 0; i < survivorCut; i++)
         {
-            survivors.Add(GetFittest());
+            survivors.Add(population[0]);
+            population.Remove(population[0]);
         }
-        for (int i = 0; i < population.Count; i++)
-        {
-            population[i].finished -= IncreseArrived;
-            population[i].crashed -= IncreseCrashed;
-            Destroy(population[i].gameObject);
-        }
-        population.Clear();
 
+        ClearPopulation(population);
+
+        //THE BEST AGENTS OF THE POPULATION KEEP THE SAME DNA
         for (int i = 0; i < survivorKeep; i++)
         {
             GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
-            //LineRenderer lr = go.GetComponent<LineRenderer>();
             GeneticPathFinder geneticPathFinder;
             switch (type)
             {
@@ -143,79 +142,58 @@ public class PopulationController : MonoBehaviour
                     geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
                     break;
             }
-            //if (geneticPathFinder.type == TypeOfDistance.Manhattan)
-            //{
-            //    lr.startColor = Color.red;
-            //    lr.endColor = Color.red;
-            //}
-            //else
-            //{
-            //    lr.startColor = Color.blue;
-            //    lr.endColor = Color.blue;
-            //}
             geneticPathFinder.finished += IncreseArrived;
             geneticPathFinder.crashed += IncreseCrashed;
             geneticPathFinder.InitCreature(survivors[i].dna, end.position);
             population.Add(geneticPathFinder);
         }
 
-        while (population.Count < populationSize)
+        //THE REST ARE MUTATIONS OF THESE BEST AGENTS
+        for (int i = 0; i < survivorCut; i++)
         {
-            for (int i = 0; i < survivorCut; i++)
+            GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
+            GeneticPathFinder geneticPathFinder;
+            switch (type)
             {
-                GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
-                //LineRenderer lr = go.GetComponent<LineRenderer>();
-                GeneticPathFinder geneticPathFinder;
-                switch (type)
-                {
-                    case TypeOfDistance.Manhattan:
-                        geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
-                        break;
-                    case TypeOfDistance.Euclidean:
-                        geneticPathFinder = go.AddComponent<GeneticPathFinderEuclidean>();
-                        break;
-                    case TypeOfDistance.Chebyshev:
-                        geneticPathFinder = go.AddComponent<GeneticPathFinderChebyshev>();
-                        break;
-                    default:
-                        geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
-                        break;
-                }
-                //if (geneticPathFinder.type == TypeOfDistance.Manhattan)
-                //{
-                //    lr.startColor=Color.red;
-                //    lr.endColor=Color.red;
-                //}
-                //else
-                //{
-                //    lr.startColor = Color.blue;
-                //    lr.endColor = Color.blue;
-                //}
-                geneticPathFinder.finished += IncreseArrived;
-                geneticPathFinder.crashed += IncreseCrashed;
-                geneticPathFinder.InitCreature(new DNA(survivors[i].dna, survivors[UnityEngine.Random.Range(0, 10)].dna, mutationRate), end.position);
-                population.Add(geneticPathFinder);
-                if (population.Count >= populationSize)
-                {
+                case TypeOfDistance.Manhattan:
+                    geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
                     break;
-                }
+                case TypeOfDistance.Euclidean:
+                    geneticPathFinder = go.AddComponent<GeneticPathFinderEuclidean>();
+                    break;
+                case TypeOfDistance.Chebyshev:
+                    geneticPathFinder = go.AddComponent<GeneticPathFinderChebyshev>();
+                    break;
+                default:
+                    geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
+                    break;
             }
+
+            geneticPathFinder.finished += IncreseArrived;
+            geneticPathFinder.crashed += IncreseCrashed;
+            geneticPathFinder.InitCreature(new DNA(survivors[i].dna, survivors[UnityEngine.Random.Range(0, 10)].dna, mutationRate), end.position);
+            population.Add(geneticPathFinder);
+            if (population.Count >= populationSize)
+            {
+                break;
+
+            }
+
+
+            ClearPopulation(survivors);
+
+            IncrementIterationCounter();
         }
-
-
-        for (int i = 0; i < survivors.Count; i++)
-        {
-            survivors[i].finished -= IncreseArrived;
-            survivors[i].crashed -= IncreseCrashed;
-            Destroy(survivors[i].gameObject);
-        }
-
-        IncrementCounter();
-
-
     }
 
-    public void IncrementCounter()
+    private void ClearPopulation(List<GeneticPathFinder> genticPathFinders)
+    {
+        for (int i = 0; i < genticPathFinders.Count; i++)
+
+            genticPathFinders.Clear();
+    }
+
+    public void IncrementIterationCounter()
     {
         iterationCounter++;
         uiUpdater.IterationNumber = iterationCounter.ToString();
@@ -240,22 +218,6 @@ public class PopulationController : MonoBehaviour
         uiUpdater.NoArrivedNumber = noArrived.ToString();
     }
 
-    GeneticPathFinder GetFittest()
-    {
-        float maxFitness = float.MinValue;
-        int index = 0;
-        for (int i = 0; i < population.Count; i++)
-        {
-            if (population[i].fitness > maxFitness)
-            {
-                maxFitness = population[i].fitness;
-                index = i;
-            }
-        }
-        GeneticPathFinder fittest = population[index];
-        population.Remove(fittest);
-        return fittest;
-    }
 
     bool HasActive()
     {
