@@ -28,15 +28,28 @@ public class GeneticPathFinder : MonoBehaviour
     public Action finished;
     public Action crashed;
 
-    public void InitCreature(DNA newDna, Vector2 target)
+    public void InitCreature(DNA newDna, Vector2 target, Vector2 beginPoint)
     {
-        travelledPath.Add(transform.position);
-        lr = GetComponent<LineRenderer>();
+        if (!lr)
+        {
+            lr = GetComponent<LineRenderer>();
+        }
+        ResetAgent();
+        transform.position = beginPoint;
         dna = newDna;
         this.target = target;
         nextPoint = transform.position;
         travelledPath.Add(nextPoint);
         hasBeenInitialized = true;
+    }
+
+    private void ResetAgent()
+    {
+        hasBeenInitialized = false;
+        hasFinished = false;
+        pathIndex = 0;
+        travelledPath.Clear();
+        lr.positionCount = 0;
     }
 
     private void Update()
@@ -47,7 +60,7 @@ public class GeneticPathFinder : MonoBehaviour
             {
                 hasFinished = true;
             }
-            if(Vector2.Distance(transform.position, target) < 0.5f)
+            if (Vector2.Distance(transform.position, target) < 0.5f)
             {
                 hasFinished = true;
                 finished?.Invoke();

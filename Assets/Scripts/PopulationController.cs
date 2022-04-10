@@ -1,9 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 public enum TypeOfDistance
 {
@@ -31,6 +28,7 @@ public class PopulationController : MonoBehaviour
     private int firstArrivedIteration = 0;
     public AlgorithmUIUpdater uiUpdater;
 
+    public int survivorKeep = 5;
 
     public int Arrived
     {
@@ -58,7 +56,6 @@ public class PopulationController : MonoBehaviour
     }
     private string Ratio => (int)(((float)arrived / (float)populationSize) * 100) + "%";
 
-    public int survivorKeep = 5;
 
     private void Start()
     {
@@ -79,120 +76,72 @@ public class PopulationController : MonoBehaviour
     {
         for (int i = 0; i < populationSize; i++)
         {
-            GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
-            GeneticPathFinder geneticPathFinder;
-            switch (type)
-            {
-                case TypeOfDistance.Manhattan:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
-                    break;
-                case TypeOfDistance.Euclidean:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderEuclidean>();
-                    break;
-                case TypeOfDistance.Chebyshev:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderChebyshev>();
-                    break;
-                default:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
-                    break;
-            }
-            geneticPathFinder.finished += IncreseArrived;
-            geneticPathFinder.crashed += IncreseCrashed;
-            geneticPathFinder.InitCreature(new DNA(genomeLenght), end.position);
+            GeneticPathFinder geneticPathFinder = GenerateAgent();
             population.Add(geneticPathFinder);
         }
+    }
+
+    private GeneticPathFinder GenerateAgent()
+    {
+        GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
+        GeneticPathFinder geneticPathFinder;
+        switch (type)
+        {
+            case TypeOfDistance.Manhattan:
+                geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
+                break;
+            case TypeOfDistance.Euclidean:
+                geneticPathFinder = go.AddComponent<GeneticPathFinderEuclidean>();
+                break;
+            case TypeOfDistance.Chebyshev:
+                geneticPathFinder = go.AddComponent<GeneticPathFinderChebyshev>();
+                break;
+            default:
+                geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
+                break;
+        }
+        geneticPathFinder.finished += IncreseArrived;
+        geneticPathFinder.crashed += IncreseCrashed;
+        geneticPathFinder.InitCreature(new DNA(genomeLenght), end.position, spawnPoint.position);
+        return geneticPathFinder;
     }
 
     void NextGeneration()
     {
         int survivorCut = Mathf.RoundToInt(populationSize * cutoff);
-        List<GeneticPathFinder> survivors = new List<GeneticPathFinder>();
+        List<GeneticPathFinder> survivors = new List<GeneticPathFinder>(population);
         uiUpdater.RatioNumber = Ratio;
-        Arrived = 0;
-        crashed = 0;
-        NoArrived = populationSize;
 
-        population = population.OrderByDescending(o => o.fitness).ToList();
-
-        for (int i = 0; i < survivorCut; i++)
+        if(arrived > survivorKeep)
         {
-            survivors.Add(population[0]);
-            population.Remove(population[0]);
+            //Probability to increment the number of agents we keep with the same path
+            //We don't always want to increment this number to keep the randomness
+            survivorKeep = Random.Range(survivorKeep, arrived + 1);
         }
 
-        ClearPopulation(population);
+        survivors = survivors.OrderByDescending(o => o.fitness).ToList();
 
         //THE BEST AGENTS OF THE POPULATION KEEP THE SAME DNA
-        for (int i = 0; i < survivorKeep; i++)
+        for (int i = 0; i < populationSize; i++)
         {
-            GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
-            GeneticPathFinder geneticPathFinder;
-            switch (type)
+            if (i < survivorKeep)
             {
-                case TypeOfDistance.Manhattan:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
-                    break;
-                case TypeOfDistance.Euclidean:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderEuclidean>();
-                    break;
-                case TypeOfDistance.Chebyshev:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderChebyshev>();
-                    break;
-                default:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
-                    break;
+                population[i].InitCreature(survivors[i].dna, end.position, spawnPoint.position);
             }
-            geneticPathFinder.finished += IncreseArrived;
-            geneticPathFinder.crashed += IncreseCrashed;
-            geneticPathFinder.InitCreature(survivors[i].dna, end.position);
-            population.Add(geneticPathFinder);
-        }
-
-        //THE REST ARE MUTATIONS OF THESE BEST AGENTS
-        for (int i = 0; i < populationSize-population.Count; i++)
-        {
-            GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
-            GeneticPathFinder geneticPathFinder;
-            switch (type)
+            else
             {
-                case TypeOfDistance.Manhattan:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
-                    break;
-                case TypeOfDistance.Euclidean:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderEuclidean>();
-                    break;
-                case TypeOfDistance.Chebyshev:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderChebyshev>();
-                    break;
-                default:
-                    geneticPathFinder = go.AddComponent<GeneticPathFinderManhattan>();
-                    break;
-            }
-
-            geneticPathFinder.finished += IncreseArrived;
-            geneticPathFinder.crashed += IncreseCrashed;
-            geneticPathFinder.InitCreature(new DNA(survivors[i%survivorCut].dna, survivors[UnityEngine.Random.Range(0, survivorCut)].dna, mutationRate), end.position);
-            population.Add(geneticPathFinder);
-            if (population.Count >= populationSize)
-            {
-                break;
-
+                population[i].InitCreature(new DNA(survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationRate), end.position, spawnPoint.position);
             }
         }
-        ClearPopulation(survivors);
-
+        ResetUIVariables();
         IncrementIterationCounter();
     }
 
-    private void ClearPopulation(List<GeneticPathFinder> geneticPathFinders)
+    private void ResetUIVariables()
     {
-        for (int i = 0; i < geneticPathFinders.Count; i++)
-        {
-            geneticPathFinders[i].finished -= IncreseArrived;
-            geneticPathFinders[i].crashed -= IncreseCrashed;
-            Destroy(geneticPathFinders[i].gameObject);
-        }
-            geneticPathFinders.Clear();
+        Arrived = 0;
+        crashed = 0;
+        NoArrived = populationSize;
     }
 
     public void IncrementIterationCounter()
@@ -216,7 +165,6 @@ public class PopulationController : MonoBehaviour
         crashed++;
         uiUpdater.NoArrivedNumber = noArrived.ToString();
     }
-
 
     bool HasActive()
     {
