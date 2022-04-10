@@ -69,7 +69,7 @@ public class PopulationController : MonoBehaviour
     {
         if (!HasActive())
         {
-            SimulationDatabase.AddIteration(type,iterationCounter, populationSize, arrived, crashed);
+            SimulationDatabase.AddIteration(type, iterationCounter, populationSize, arrived, crashed);
 
             NextGeneration();
         }
@@ -149,7 +149,7 @@ public class PopulationController : MonoBehaviour
         }
 
         //THE REST ARE MUTATIONS OF THESE BEST AGENTS
-        for (int i = 0; i < survivorCut; i++)
+        for (int i = 0; i < populationSize-population.Count; i++)
         {
             GameObject go = Instantiate(creaturePrefab, spawnPoint.position, Quaternion.identity);
             GeneticPathFinder geneticPathFinder;
@@ -171,26 +171,28 @@ public class PopulationController : MonoBehaviour
 
             geneticPathFinder.finished += IncreseArrived;
             geneticPathFinder.crashed += IncreseCrashed;
-            geneticPathFinder.InitCreature(new DNA(survivors[i].dna, survivors[UnityEngine.Random.Range(0, 10)].dna, mutationRate), end.position);
+            geneticPathFinder.InitCreature(new DNA(survivors[i%survivorCut].dna, survivors[UnityEngine.Random.Range(0, survivorCut)].dna, mutationRate), end.position);
             population.Add(geneticPathFinder);
             if (population.Count >= populationSize)
             {
                 break;
 
             }
-
-
-            ClearPopulation(survivors);
-
-            IncrementIterationCounter();
         }
+        ClearPopulation(survivors);
+
+        IncrementIterationCounter();
     }
 
-    private void ClearPopulation(List<GeneticPathFinder> genticPathFinders)
+    private void ClearPopulation(List<GeneticPathFinder> geneticPathFinders)
     {
-        for (int i = 0; i < genticPathFinders.Count; i++)
-
-            genticPathFinders.Clear();
+        for (int i = 0; i < geneticPathFinders.Count; i++)
+        {
+            geneticPathFinders[i].finished -= IncreseArrived;
+            geneticPathFinders[i].crashed -= IncreseCrashed;
+            Destroy(geneticPathFinders[i].gameObject);
+        }
+            geneticPathFinders.Clear();
     }
 
     public void IncrementIterationCounter()
@@ -201,10 +203,8 @@ public class PopulationController : MonoBehaviour
 
     private void IncreseArrived()
     {
-        arrived++;
-        noArrived--;
-        uiUpdater.ArrivedNumber = arrived.ToString();
-        uiUpdater.NoArrivedNumber = noArrived.ToString();
+        Arrived++;
+        NoArrived--;
         if (firstArrivedIteration == 0)
         {
             firstArrivedIteration = iterationCounter;
@@ -214,7 +214,6 @@ public class PopulationController : MonoBehaviour
     private void IncreseCrashed()
     {
         crashed++;
-        noArrived--;
         uiUpdater.NoArrivedNumber = noArrived.ToString();
     }
 
