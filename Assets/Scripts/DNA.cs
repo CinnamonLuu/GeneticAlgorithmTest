@@ -10,7 +10,8 @@ public class DNA
     {
         for (int i = 0; i < genomeLenght; i++)
         {
-            genes.Add(new Vector2(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f)));
+            Vector2 randomMovement = new Vector2(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f));
+            genes.Add(randomMovement.normalized);
         }
     }
 

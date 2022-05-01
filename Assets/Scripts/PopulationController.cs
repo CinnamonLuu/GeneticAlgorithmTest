@@ -17,8 +17,10 @@ public class PopulationController : MonoBehaviour
     public int genomeLenght;
     public TypeOfDistance type;
     public float cutoff = 0.3f;
-    [Range(0f, 1f)] public float mutationRate;
-    [Range(0f, 1f)] [Tooltip("Weight applied to the parent movement, at 0 the movement will be completely random")]public float mutationWeight;
+    [Range(0f, 1f)] public float mutationChance;
+    [Range(0f, 1f)] [Tooltip("Weight applied to the parent movement, at 0 the movement will be completely random")]
+    public float parentMutationWeight;
+    public bool usesPoissonBin;
     public Transform spawnPoint;
     public Transform end;
 
@@ -67,7 +69,7 @@ public class PopulationController : MonoBehaviour
     {
         if (!HasActive())
         {
-            SimulationDatabase.AddIteration(type, iterationCounter, populationSize, arrived, crashed);
+            SimulationDatabase.AddIteration(type, iterationCounter, arrived /populationSize, arrived, crashed);
 
             NextGeneration();
         }
@@ -131,7 +133,7 @@ public class PopulationController : MonoBehaviour
             }
             else
             {
-                population[i].InitCreature(new DNA(survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationRate, mutationWeight), end.position, spawnPoint.position);
+                population[i].InitCreature(new DNA(survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationChance, parentMutationWeight), end.position, spawnPoint.position);
             }
         }
         ResetUIVariables();
@@ -177,5 +179,10 @@ public class PopulationController : MonoBehaviour
             }
         }
         return false;
+    }
+
+    private void OnApplicationQuit()
+    {
+        SimulationDatabase.AddSimulation(type, populationSize, survivorKeep, cutoff, mutationChance, parentMutationWeight, usesPoissonBin, 0);
     }
 }

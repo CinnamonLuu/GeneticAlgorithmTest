@@ -25,7 +25,7 @@ public class SimulationDatabase : MonoBehaviour
                 command.CommandText = "CREATE TABLE IF NOT EXISTS iterations (iterationID INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "distanceType VARCHAR(255) CHECK(distanceType = 'Euclidean' OR distanceType = 'Manhattan' OR distanceType = 'Chebyshev')," +
                     "currentIteration INTEGER," +
-                    "currentNumAgents INTEGER," +
+                    "successRatio INTEGER," +
                     "numSuccessfulAgents INTEGER," +
                     "numCrashedAgents INTEGER" +
                     ");";
@@ -34,9 +34,11 @@ public class SimulationDatabase : MonoBehaviour
 
                 command.CommandText = "CREATE TABLE IF NOT EXISTS simulations (simulationID INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "distanceType VARCHAR(255) CHECK(distanceType = 'Euclidean' OR distanceType = 'Manhattan' OR distanceType = 'Chebyshev')," +
-                    "startingNumAgents INTEGER," + 
+                    "startingNumAgents INTEGER," +
                     "elitism INTEGER," +
                     "cutoff REAL," +
+                    "mutationChance REAL," +
+                    "parentMutationWeight REAL CHECK(parentMutationWeight >= 0 OR parentMutationWeight <= 1)," +
                     "usesPoisson BOOLEAN NOT NULL CHECK (usesPoisson IN (0, 1))," +
                     "firstSuccessfulIteration INTEGER," +
                     "FOREIGN KEY (firstSuccessfulIteration) REFERENCES iterations(iterationID)" +
@@ -47,7 +49,7 @@ public class SimulationDatabase : MonoBehaviour
         }
     }
 
-    public static void AddSimulation(TypeOfDistance distanceType, int startingNumAgents, int elitism, float cutoff, bool usesPoisson, int iterationID)
+    public static void AddSimulation(TypeOfDistance distanceType, int startingNumAgents, int elitism, float cutoff, float mutationChance, float parentMutationWeight, bool usesPoisson, int iterationID)
     {
         using (SqliteConnection connection = new SqliteConnection(dbName))
         {
@@ -70,8 +72,8 @@ public class SimulationDatabase : MonoBehaviour
 
                 }
 
-                command.CommandText = "INSERT INTO simulations (distanceType, startingNumAgents, elitism, cutoff, usesPoisson, firstSuccessfulIteration)" +
-                    "VALUES ('" + typeName + "', '" + startingNumAgents + "', '" + elitism + "', '" + cutoff + "', '" + usesPoisson + "', '" + iterationID + "');";
+                command.CommandText = "INSERT INTO simulations (distanceType, startingNumAgents, elitism, cutoff, mutationChance, parentMutationWeight, usesPoisson, firstSuccessfulIteration)" +
+                    "VALUES ('" + typeName + "', '" + startingNumAgents + "', '" + elitism + "', '" + cutoff + "', '" + mutationChance + "', '" + parentMutationWeight + "', '" + (usesPoisson?1:0) + "', '" + iterationID + "');";
 
                 command.ExecuteNonQuery();
 
@@ -80,7 +82,7 @@ public class SimulationDatabase : MonoBehaviour
         }
     }
 
-    public static void AddIteration(TypeOfDistance distanceType, int currentIteration, int currentNumAgents, int numSuccessfulAgents, int numCrashedAgents)
+    public static void AddIteration(TypeOfDistance distanceType, int currentIteration, int successRatio, int numSuccessfulAgents, int numCrashedAgents)
     {
         using (SqliteConnection connection = new SqliteConnection(dbName))
         {
@@ -103,8 +105,8 @@ public class SimulationDatabase : MonoBehaviour
                         break;
 
                 }
-                command.CommandText = "INSERT INTO iterations (distanceType, currentIteration, currentNumAgents, numSuccessfulAgents, numCrashedAgents)" +
-                    "VALUES ('" + typeName + "', '" + currentIteration + "', '" + currentNumAgents + "', '" + numSuccessfulAgents + "', '" + numCrashedAgents + "');";
+                command.CommandText = "INSERT INTO iterations (distanceType, currentIteration, successRatio, numSuccessfulAgents, numCrashedAgents)" +
+                    "VALUES ('" + typeName + "', '" + currentIteration + "', '" + successRatio + "', '" + numSuccessfulAgents + "', '" + numCrashedAgents + "');";
 
                 command.ExecuteNonQuery();
 
