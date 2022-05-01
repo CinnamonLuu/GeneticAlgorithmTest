@@ -18,6 +18,7 @@ public class PopulationController : MonoBehaviour
     public TypeOfDistance type;
     public float cutoff = 0.3f;
     [Range(0f, 1f)] public float mutationRate;
+    [Range(0f, 1f)] [Tooltip("Weight applied to the parent movement, at 0 the movement will be completely random")]public float mutationWeight;
     public Transform spawnPoint;
     public Transform end;
 
@@ -130,7 +131,7 @@ public class PopulationController : MonoBehaviour
             }
             else
             {
-                population[i].InitCreature(new DNA(survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationRate), end.position, spawnPoint.position);
+                population[i].InitCreature(new DNA(survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationRate, mutationWeight), end.position, spawnPoint.position);
             }
         }
         ResetUIVariables();

@@ -2087,6 +2087,10 @@ PrefabInstance:
       propertyPath: counterText
       value: 
       objectReference: {fileID: 321406204}
+    - target: {fileID: 8013411837938226516, guid: 21d50a9ee1cdb88499b60788caacd19d, type: 3}
+      propertyPath: mutationWeight
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 8013411837979512814, guid: 21d50a9ee1cdb88499b60788caacd19d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 22.2

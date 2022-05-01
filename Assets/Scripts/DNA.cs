@@ -14,14 +14,16 @@ public class DNA
         }
     }
 
-    public DNA(DNA parent, DNA partner, float mutationRate = 0.01f)
+    public DNA(DNA parent, DNA partner, float mutationRate = 0.01f, float mutationWeight = 0.5f)
     {
         for (int i = 0; i < parent.genes.Count; i++)
         {
             float mutationChance = Random.Range(0.0f, 1.0f);
             if (mutationChance <= mutationRate)
             {
-                genes.Add(new Vector2(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f)));
+                Vector2 randomMovement = new Vector2(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f));
+                Vector2 mutatedMovement = (parent.genes[i] * mutationWeight + randomMovement * (1 - mutationWeight)) / 2;
+                genes.Add(mutatedMovement.normalized);
             }
             else
             {
