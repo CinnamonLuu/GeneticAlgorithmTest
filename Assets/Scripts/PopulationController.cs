@@ -12,14 +12,15 @@ public enum TypeOfDistance
 public class PopulationController : MonoBehaviour
 {
     List<GeneticPathFinder> population = new List<GeneticPathFinder>();
-    public GameObject creaturePrefab;
+    private GameObject creaturePrefab;
     public int populationSize = 100;
     public int genomeLenght;
     public TypeOfDistance type;
     public float cutoff = 0.3f;
-    [Range(0f, 1f)] public float mutationChance;
-    [Range(0f, 1f)] [Tooltip("Weight applied to the parent movement, at 0 the movement will be completely random")]
-    public float parentMutationWeight;
+    [Range(0f, 1f)] public float mutationChance = 0.5f;
+    [Range(0f, 1f)]
+    [Tooltip("Weight applied to the parent movement, at 0 the movement will be completely random")]
+    public float parentMutationWeight = 0.5f;
     public bool usesPoissonBin;
     public Transform spawnPoint;
     public Transform end;
@@ -62,6 +63,7 @@ public class PopulationController : MonoBehaviour
 
     private void Start()
     {
+        creaturePrefab = Resources.Load<GameObject>("Creature");
         InitPopulation();
     }
 
@@ -69,7 +71,7 @@ public class PopulationController : MonoBehaviour
     {
         if (!HasActive())
         {
-            SimulationDatabase.AddIteration(type, iterationCounter, arrived /populationSize, arrived, crashed);
+            SimulationDatabase.AddIteration(type, iterationCounter, arrived / populationSize, arrived, crashed);
 
             NextGeneration();
         }
@@ -115,7 +117,7 @@ public class PopulationController : MonoBehaviour
         List<GeneticPathFinder> survivors = new List<GeneticPathFinder>(population);
         uiUpdater.RatioNumber = Ratio;
 
-        if(arrived > survivorKeep)
+        if (arrived > survivorKeep)
         {
             //Probability to increment the number of agents we keep with the same path
             //We don't always want to increment this number to keep the randomness
