@@ -9,6 +9,7 @@ public enum TypeOfDistance
     Chebyshev
 }
 
+[System.Serializable]
 public class PopulationController : MonoBehaviour
 {
     List<GeneticPathFinder> population = new List<GeneticPathFinder>();
@@ -61,12 +62,6 @@ public class PopulationController : MonoBehaviour
     private string Ratio => (int)(((float)arrived / (float)populationSize) * 100) + "%";
 
 
-    private void Start()
-    {
-        creaturePrefab = Resources.Load<GameObject>("Creature");
-        InitPopulation();
-    }
-
     private void Update()
     {
         if (!HasActive())
@@ -77,8 +72,9 @@ public class PopulationController : MonoBehaviour
         }
     }
 
-    void InitPopulation()
+    public void InitPopulation()
     {
+        creaturePrefab = Resources.Load<GameObject>("Creature");
         for (int i = 0; i < populationSize; i++)
         {
             GeneticPathFinder geneticPathFinder = GenerateAgent();
