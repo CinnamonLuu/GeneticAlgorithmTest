@@ -35,6 +35,8 @@ public class PopulationController : MonoBehaviour
 
     public int survivorKeep = 5;
 
+    public List<Line> PopulationPathLines;
+
     public int Arrived
     {
         set
@@ -61,7 +63,6 @@ public class PopulationController : MonoBehaviour
     }
     private string Ratio => (int)(((float)arrived / (float)populationSize) * 100) + "%";
 
-
     private void Update()
     {
         if (!HasActive())
@@ -74,11 +75,24 @@ public class PopulationController : MonoBehaviour
 
     public void InitPopulation()
     {
-        creaturePrefab = Resources.Load<GameObject>("Creature");
-        for (int i = 0; i < populationSize; i++)
+
+        if (SimulationController.Instance.visualSimulation)
+        { 
+            creaturePrefab = Resources.Load<GameObject>("Creature");
+            for (int i = 0; i < populationSize; i++)
+            {
+                GeneticPathFinder geneticPathFinder = GenerateAgent();
+                population.Add(geneticPathFinder);
+            }
+        }
+        else
         {
-            GeneticPathFinder geneticPathFinder = GenerateAgent();
-            population.Add(geneticPathFinder);
+            DNA dna ;
+            for (int i = 0; i < SimulationController.Instance.NumAgents; i++)
+            {
+                dna = new DNA(SimulationController.Instance.NumMovements);
+                //SimulationController.Instance.
+            }
         }
     }
 

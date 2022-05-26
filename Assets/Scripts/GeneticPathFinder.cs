@@ -54,6 +54,8 @@ public class GeneticPathFinder : MonoBehaviour
 
     private void Update()
     {
+        if (!SimulationController.Instance.visualSimulation) return;
+
         if (hasBeenInitialized && !hasFinished)
         {
             if (pathIndex == dna.genes.Count)

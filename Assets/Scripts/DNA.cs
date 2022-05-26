@@ -15,6 +15,7 @@ public class DNA
         }
     }
 
+
     public DNA(DNA parent, DNA partner, float mutationRate = 0.01f, float mutationWeight = 0.5f)
     {
         for (int i = 0; i < parent.genes.Count; i++)

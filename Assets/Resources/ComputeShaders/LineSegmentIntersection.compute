@@ -1,0 +1,64 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel LineIntersection
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+
+struct Line
+{
+	float2 pointA;
+	float2 pointB;
+};
+
+RWStructuredBuffer<Line> _obstacleBounds;
+RWStructuredBuffer<Line> _path;
+RWStructuredBuffer<bool> _intersects;
+
+int numMovements;
+
+
+
+bool IsPointsOnDifferentSides(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
+{
+	bool isOnDifferentSides = false;
+	
+	//The direction of the line
+	float2 lineDir = obsB - obsA;
+
+	//The normal to a line is just flipping x and y and making y negative
+	float2 lineNormal = float2(-lineDir.y, lineDir.x);
+	
+	//Now we need to take the dot product between the normal and the points on the other line
+	float dot1 = dot(lineNormal, pathA - obsA);
+	float dot2 = dot(lineNormal, pathB - obsA);
+
+	//If you multiply them and get a negative value then p3 and p4 are on different sides of the line
+	if (dot1 * dot2 < 0)
+	{
+		isOnDifferentSides = true;
+	}
+
+	return isOnDifferentSides;
+}
+
+bool AreLineSegmentsIntersectingDotProduct(Line obstacleLine, Line pathLine)
+{
+	bool isIntersecting = false;
+
+	if (IsPointsOnDifferentSides(obstacleLine.pointA, obstacleLine.pointB, pathLine.pointA, pathLine.pointB)
+		&& IsPointsOnDifferentSides(pathLine.pointA, pathLine.pointA, obstacleLine.pointA, obstacleLine.pointA))
+	{
+		isIntersecting = true;
+	}
+
+	return isIntersecting;
+}
+
+[numthreads(8, 8, 1)]
+void LineIntersection(uint3 id : SV_DispatchThreadID)
+{
+   
+	_intersects[id.y / numMovements] |= AreLineSegmentsIntersectingDotProduct(_obstacleBounds[id.x], _path[id.y]);
+	
+}
