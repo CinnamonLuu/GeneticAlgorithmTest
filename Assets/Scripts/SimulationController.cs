@@ -1,30 +1,34 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public enum SimulationMap 
+{ 
+    DiagonalObstacles, 
+    DiagonalObstacles1, 
+    StraightObstacles,
+    StraightObstacles1
+}
 
 public class SimulationController : MonoBehaviour
 {
+    /*-------------------------SINGLETON----------------------------- */
     private static SimulationController instance;
     public static SimulationController Instance => instance;
+    /*--------------------------------------------------------------- */
 
-    public SimulationManager simulationManager;
+    /*---------------------------CONSTS------------------------------ */
+    public const int visualSimulationSceneIndex = 1;
+    public const int dataSimulationSceneIndex = 2;
+    /*--------------------------------------------------------------- */
 
+    /*---------------------CONFIGURABLE INFO------------------------- */
     public bool visualSimulation = true;
-
-    /// 
     public int NumAgents;
     public int NumMovements;
-    /// 
-
-
-
-    public PopulationController manhattanPopulationController;
-    public PopulationController euclideanPopulationController;
-    public PopulationController chebychevPopulationController;
-
-    public MapSerializer mapSerializer;
-    public GPUIntersectionChecker intersectionChecker;
-
+    public SimulationMap map;
+    /*--------------------------------------------------------------- */
 
     public void Awake()
     {
@@ -47,32 +51,16 @@ public class SimulationController : MonoBehaviour
         else
         {
             InitializeGPUSimulation();
-            //simulation with gpu
-
         }
+        FindObjectOfType<Camera>().enabled = false;
     }
 
     private void InitializeCPUSimulation()
     {
-        //TODO: Instantiate population Controllers
-        manhattanPopulationController.InitPopulation();
-        euclideanPopulationController.InitPopulation();
-        chebychevPopulationController.InitPopulation();
+        SceneManager.LoadScene(visualSimulationSceneIndex, LoadSceneMode.Additive);
     }
     private void InitializeGPUSimulation()
     {
-        mapSerializer = FindObjectOfType<MapSerializer>();
-        mapSerializer.Init();
-
-        intersectionChecker = new GPUIntersectionChecker();
-
-        List<Line> tmpLines = new List<Line>();
-        for (int i = 0; i < NumAgents; i++)
-        {
-            tmpLines.AddRange(new GPUDna(mapSerializer.spawnPosition.position, NumMovements).lines);
-        }
-        intersectionChecker.Init(NumAgents, mapSerializer.ObastacleMapLines.ToArray() ,tmpLines.ToArray());
+        SceneManager.LoadScene(dataSimulationSceneIndex, LoadSceneMode.Additive);
     }
-
-
 }

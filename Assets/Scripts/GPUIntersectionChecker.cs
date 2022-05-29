@@ -4,11 +4,8 @@ using UnityEngine;
 
 public class GPUIntersectionChecker
 {
-
     public bool[] s_agentCrashed;
-
     private Line[] s_obstacleBounds;
-
     private Line[] s_agentsPathLines;
 
     public Line[] S_agentsPathLines { get => s_agentsPathLines; set => s_agentsPathLines = value; }
@@ -21,11 +18,16 @@ public class GPUIntersectionChecker
 
     private ComputeShader computeShader;
 
-    public void Init(int numAgents, Line[] obstacleBounds, Line[] agentsPathLines)
+    public void Init(int numAgents, Line[] obstacleBounds, Vector2 spawnPoint)
     {
         s_agentCrashed = new bool[numAgents];
         s_obstacleBounds = obstacleBounds;
-        s_agentsPathLines = agentsPathLines;
+        List<Line> agentsPathLines = new List<Line>();
+        for (int i = 0; i < numAgents; i++)
+        {
+            agentsPathLines.AddRange(new DNA_DataSimulation(spawnPoint, SimulationController.Instance.NumMovements).lines);
+        }
+        s_agentsPathLines = agentsPathLines.ToArray();
 
         computeShader = Resources.Load<ComputeShader>("ComputeShaders/LineSegmentIntersection");
         CheckIntersectionGPU();
@@ -64,6 +66,6 @@ public class GPUIntersectionChecker
         {
             Debug.Log($"{i}: {s_agentCrashed[i]}");
         }
-
+        //introduce data in data base
     }
 }

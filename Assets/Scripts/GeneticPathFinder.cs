@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -54,7 +53,7 @@ public class GeneticPathFinder : MonoBehaviour
 
     private void Update()
     {
-        if (!SimulationController.Instance.visualSimulation) return;
+        if (SimulationController.Instance && !SimulationController.Instance.visualSimulation) return;
 
         if (hasBeenInitialized && !hasFinished)
         {

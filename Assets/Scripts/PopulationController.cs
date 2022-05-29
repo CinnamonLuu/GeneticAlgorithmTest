@@ -63,6 +63,11 @@ public class PopulationController : MonoBehaviour
     }
     private string Ratio => (int)(((float)arrived / (float)populationSize) * 100) + "%";
 
+    private void Start()
+    {
+        InitPopulation();
+    }
+
     private void Update()
     {
         if (!HasActive())
@@ -73,25 +78,37 @@ public class PopulationController : MonoBehaviour
         }
     }
 
-    public void InitPopulation()
+    public void InitPopulation(bool initializeWithSimulationController = true)
     {
+        creaturePrefab = Resources.Load<GameObject>("Creature");
 
-        if (SimulationController.Instance.visualSimulation)
-        { 
-            creaturePrefab = Resources.Load<GameObject>("Creature");
-            for (int i = 0; i < populationSize; i++)
+        if (SimulationController.Instance)
+        {
+            if (SimulationController.Instance.visualSimulation)
             {
-                GeneticPathFinder geneticPathFinder = GenerateAgent();
-                population.Add(geneticPathFinder);
+                GeneticPathFinder geneticPathFinder;
+                for (int i = 0; i < SimulationController.Instance.NumAgents; i++)
+                {
+                    geneticPathFinder = GenerateAgent();
+                    population.Add(geneticPathFinder);
+                }
+            }
+            else
+            {
+                DNA dna;
+                for (int i = 0; i < SimulationController.Instance.NumAgents; i++)
+                {
+                    dna = new DNA(SimulationController.Instance.NumMovements);
+                    //SimulationController.Instance.
+                }
             }
         }
         else
         {
-            DNA dna ;
-            for (int i = 0; i < SimulationController.Instance.NumAgents; i++)
+            for (int i = 0; i < populationSize; i++)
             {
-                dna = new DNA(SimulationController.Instance.NumMovements);
-                //SimulationController.Instance.
+                GeneticPathFinder geneticPathFinder = GenerateAgent();
+                population.Add(geneticPathFinder);
             }
         }
     }
