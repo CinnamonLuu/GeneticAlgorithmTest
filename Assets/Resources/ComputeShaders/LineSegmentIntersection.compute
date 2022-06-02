@@ -1,10 +1,6 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel LineIntersection
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
-
-
 struct Line
 {
 	float2 pointA;
@@ -13,10 +9,9 @@ struct Line
 
 RWStructuredBuffer<Line> _obstacleBounds;
 RWStructuredBuffer<Line> _path;
-RWStructuredBuffer<bool> _intersects;
+RWStructuredBuffer<int> _intersects;
 
 int numMovements;
-
 
 
 bool IsPointsOnDifferentSides(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
@@ -47,7 +42,7 @@ bool AreLineSegmentsIntersectingDotProduct(Line obstacleLine, Line pathLine)
 	bool isIntersecting = false;
 
 	if (IsPointsOnDifferentSides(obstacleLine.pointA, obstacleLine.pointB, pathLine.pointA, pathLine.pointB)
-		&& IsPointsOnDifferentSides(pathLine.pointA, pathLine.pointA, obstacleLine.pointA, obstacleLine.pointA))
+		&& IsPointsOnDifferentSides(pathLine.pointA, pathLine.pointB, obstacleLine.pointA, obstacleLine.pointB))
 	{
 		isIntersecting = true;
 	}
@@ -58,7 +53,9 @@ bool AreLineSegmentsIntersectingDotProduct(Line obstacleLine, Line pathLine)
 [numthreads(8, 8, 1)]
 void LineIntersection(uint3 id : SV_DispatchThreadID)
 {
-   
-	_intersects[id.y / numMovements] |= AreLineSegmentsIntersectingDotProduct(_obstacleBounds[id.x], _path[id.y]);
+	if (AreLineSegmentsIntersectingDotProduct(_obstacleBounds[id.x], _path[id.y]))
+		_intersects[id.y / numMovements] = 1;
+	else
+		_intersects[id.y / numMovements] = 0;
 	
 }

@@ -1,15 +1,20 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GPUIntersectionChecker
 {
-    public bool[] s_agentCrashed;
-    private Line[] s_obstacleBounds;
-    private Line[] s_agentsPathLines;
 
-    public Line[] S_agentsPathLines { get => s_agentsPathLines; set => s_agentsPathLines = value; }
-    public Line[] S_obstacleBounds { get => s_obstacleBounds; set => s_obstacleBounds = value; }
+    public int[] _agentCrashed;
+    public bool[] _agentCrashedBool;
+
+    private Line[] _obstacleBounds;
+
+    private Line[] _agentsPathLines;
+
+    public Line[] AgentsPathLines { get => _agentsPathLines; set => _agentsPathLines = value; }
+    public Line[] ObstacleBounds { get => _obstacleBounds; set => _obstacleBounds = value; }
 
     private static readonly int
         obstacleBoundsArrayID = Shader.PropertyToID("_obstacleBounds"),
@@ -20,51 +25,104 @@ public class GPUIntersectionChecker
 
     public void Init(int numAgents, Line[] obstacleBounds, Vector2 spawnPoint)
     {
-        s_agentCrashed = new bool[numAgents];
-        s_obstacleBounds = obstacleBounds;
+        _agentCrashed = new int[numAgents];
+        _obstacleBounds = obstacleBounds;
         List<Line> agentsPathLines = new List<Line>();
         for (int i = 0; i < numAgents; i++)
         {
             agentsPathLines.AddRange(new DNA_DataSimulation(spawnPoint, SimulationController.Instance.NumMovements).lines);
         }
-        s_agentsPathLines = agentsPathLines.ToArray();
+        _agentsPathLines = agentsPathLines.ToArray();
 
         computeShader = Resources.Load<ComputeShader>("ComputeShaders/LineSegmentIntersection");
         CheckIntersectionGPU();
+        //CheckIntersectionCPU();
+    }
+
+    private void CheckIntersectionCPU()
+    {
+        for (int i = 0; i < _agentsPathLines.Length; i++)
+        {
+            for (int j = 0; j < _obstacleBounds.Length; j++)
+            {
+                _agentCrashedBool[i / SimulationController.Instance.NumMovements] |= AreLineSegmentsIntersectingDotProduct(_obstacleBounds[j], _agentsPathLines[i]);
+            }
+        }
+
+        for (int i = 0; i < _agentCrashedBool.Length; i++)
+        {
+            Debug.Log($"{i}: {_agentCrashedBool[i]}");
+        }
+
+        bool IsPointsOnDifferentSides(Vector2 obsA, Vector2 obsB, Vector2 pathA, Vector2 pathB)
+        {
+            bool isOnDifferentSides = false;
+
+            //The direction of the line
+            Vector2 lineDir = obsB - obsA;
+
+            //The normal to a line is just flipping x and y and making y negative
+            Vector2 lineNormal = new Vector2(-lineDir.y, lineDir.x);
+
+            //Now we need to take the dot product between the normal and the points on the other line
+            float dot1 = Vector2.Dot(lineNormal, pathA - obsA);
+            float dot2 = Vector2.Dot(lineNormal, pathB - obsA);
+
+            //If you multiply them and get a negative value then p3 and p4 are on different sides of the line
+            if (dot1 * dot2 < 0)
+            {
+                isOnDifferentSides = true;
+            }
+
+            return isOnDifferentSides;
+        }
+
+        bool AreLineSegmentsIntersectingDotProduct(Line obstacleLine, Line pathLine)
+        {
+            bool isIntersecting = false;
+
+            if (IsPointsOnDifferentSides(obstacleLine.PointA, obstacleLine.PointB, pathLine.PointA, pathLine.PointB)
+                && IsPointsOnDifferentSides(pathLine.PointA, pathLine.PointB, obstacleLine.PointA, obstacleLine.PointB))
+            {
+                isIntersecting = true;
+            }
+
+            return isIntersecting;
+        }
     }
 
     public void CheckIntersectionGPU()
     {
         int vec2Size = sizeof(float) * 2;
         int totalSize = vec2Size * 2;
-        ComputeBuffer obstacleLines = new ComputeBuffer(s_obstacleBounds.Length, totalSize);
-        ComputeBuffer pathLines = new ComputeBuffer(s_agentsPathLines.Length, totalSize);
-        ComputeBuffer agentsCrashed = new ComputeBuffer(s_agentCrashed.Length, 4);
+        ComputeBuffer obstacleLines = new ComputeBuffer(_obstacleBounds.Length, totalSize);
+        ComputeBuffer pathLines = new ComputeBuffer(_agentsPathLines.Length, totalSize);
+        ComputeBuffer agentsCrashed = new ComputeBuffer(_agentCrashed.Length, sizeof(int));
 
         //int kernelIndex = ComputeShader.FindKernel("LineIntersection");
 
-        obstacleLines.SetData(S_obstacleBounds);
+        obstacleLines.SetData(ObstacleBounds);
         computeShader.SetBuffer(0, obstacleBoundsArrayID, obstacleLines);
 
-        pathLines.SetData(S_agentsPathLines);
+        pathLines.SetData(AgentsPathLines);
         computeShader.SetBuffer(0, agentPathArrayID, pathLines);
 
-        agentsCrashed.SetData(s_agentCrashed);
+        agentsCrashed.SetData(_agentCrashed);
         computeShader.SetBuffer(0, agentCrashedArrayID, agentsCrashed);
 
         computeShader.SetInt("numMovements", SimulationController.Instance.NumMovements);
 
-        computeShader.Dispatch(0, Mathf.CeilToInt(s_obstacleBounds.Length / 8), Mathf.CeilToInt(s_agentsPathLines.Length / 8), 1);
+        computeShader.Dispatch(0, Mathf.CeilToInt(_obstacleBounds.Length / 8), Mathf.CeilToInt(_agentsPathLines.Length / 8), 1);
 
-        agentsCrashed.GetData(s_agentCrashed);
+        agentsCrashed.GetData(_agentCrashed);
 
         obstacleLines.Dispose();
         pathLines.Dispose();
         agentsCrashed.Dispose();
 
-        for (int i = 0; i < s_agentCrashed.Length; i++)
+        for (int i = 0; i < _agentCrashed.Length; i++)
         {
-            Debug.Log($"{i}: {s_agentCrashed[i]}");
+            Debug.Log($"{i}: {_agentCrashed[i]}");
         }
         //introduce data in data base
     }

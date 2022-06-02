@@ -5,9 +5,12 @@ using UnityEngine;
 
 public class GeneticPathFinder : MonoBehaviour
 {
+
+    //TODO Jose: Clean this class
     float creatureSpeed = 20;
 
-    public float pathMultiplier = 0.5f;
+    //this variable is useless unless implemented in gpu, probably should be removed 
+    public float pathMultiplier = 1f;
     int pathIndex = 0;
 
     public float rotationSpeed = 180;
@@ -53,6 +56,7 @@ public class GeneticPathFinder : MonoBehaviour
 
     private void Update()
     {
+        //TODO: Check if necessary
         if (SimulationController.Instance && !SimulationController.Instance.visualSimulation) return;
 
         if (hasBeenInitialized && !hasFinished)
