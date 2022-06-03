@@ -2,45 +2,51 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class GeneticPathFinder : MonoBehaviour
 {
-
     //TODO Jose: Clean this class
-    float creatureSpeed = 20;
-
-    //this variable is useless unless implemented in gpu, probably should be removed 
-    public float pathMultiplier = 1f;
-    int pathIndex = 0;
-
-    public float rotationSpeed = 180;
-    public LayerMask obstacleLayer = 1 << 6;
 
     public DNA dna;
-    public bool hasFinished = false;
-    bool hasBeenInitialized = false;
-    bool hasCrashed = false;
-    protected Vector2 target;
-    Quaternion targetRotation;
-    Vector2 nextPoint;
+    public LayerMask obstacleLayer = 1 << 6;
+    private LineRenderer lineRenderer;
+    private List<Vector2> travelledPath = new List<Vector2>();
 
-    List<Vector2> travelledPath = new List<Vector2>();
-    LineRenderer lr;
+    private int pathIndex = 0;
+    private float creatureSpeed = 20;
+    private float rotationSpeed = 180;
+
+    //this variable is useless unless implemented in gpu, probably should be removed
+    public float pathMultiplier = .5f;
+
+    private Vector2 nextPoint;
+
+    protected Vector2 target;
+    private Quaternion targetRotation;
+
+    [Header("State")]
+    private bool hasBeenInitialized = false;
+
+    public bool hasFinished = false;
+    private bool hasCrashed = false;
 
     public Action finished;
     public Action crashed;
 
     public void InitCreature(DNA newDna, Vector2 target, Vector2 beginPoint)
     {
-        if (!lr)
+        if (!lineRenderer)
         {
-            lr = GetComponent<LineRenderer>();
+            lineRenderer = GetComponent<LineRenderer>();
         }
+
         ResetAgent();
+
         transform.position = beginPoint;
+        nextPoint = transform.position;
+
         dna = newDna;
         this.target = target;
-        nextPoint = transform.position;
+
         travelledPath.Add(nextPoint);
         hasBeenInitialized = true;
     }
@@ -51,7 +57,7 @@ public class GeneticPathFinder : MonoBehaviour
         hasFinished = false;
         pathIndex = 0;
         travelledPath.Clear();
-        lr.positionCount = 0;
+        lineRenderer.positionCount = 0;
     }
 
     private void Update()
@@ -94,7 +100,6 @@ public class GeneticPathFinder : MonoBehaviour
         List<Vector3> linePoints = new List<Vector3>();
         if (travelledPath.Count > 3)
         {
-
             for (int i = 0; i < travelledPath.Count - 1; i++)
             {
                 linePoints.Add(travelledPath[i]);
@@ -106,8 +111,8 @@ public class GeneticPathFinder : MonoBehaviour
             linePoints.Add(travelledPath[0]);
             linePoints.Add(transform.position);
         }
-        lr.positionCount = linePoints.Count;
-        lr.SetPositions(linePoints.ToArray());
+        lineRenderer.positionCount = linePoints.Count;
+        lineRenderer.SetPositions(linePoints.ToArray());
     }
 
     public float fitness
