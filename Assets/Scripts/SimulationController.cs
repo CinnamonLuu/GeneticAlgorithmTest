@@ -1,12 +1,11 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public enum SimulationMap 
-{ 
-    DiagonalObstacles, 
-    DiagonalObstacles1, 
+public enum SimulationMap
+{
+    DiagonalObstacles,
+    DiagonalObstacles1,
     StraightObstacles,
     StraightObstacles1
 }
@@ -32,8 +31,8 @@ public class SimulationController : MonoBehaviour
 
     //TEMPORAL
     public List<Line> tmpLines = new List<Line>();
-    public List<DNA_DataSimulation> temporalGPUValidator = new List<DNA_DataSimulation>();
 
+    public List<DNA_DataSimulation> temporalGPUValidator = new List<DNA_DataSimulation>();
 
     public void Awake()
     {
@@ -62,15 +61,12 @@ public class SimulationController : MonoBehaviour
 
     private void InitializeCPUSimulation()
     {
-
         SceneManager.LoadScene(visualSimulationSceneIndex, LoadSceneMode.Additive);
     }
-   
+
     private void InitializeGPUSimulation()
     {
-
         SceneManager.LoadScene(dataSimulationSceneIndex, LoadSceneMode.Additive);
-
 
         /*mapSerializer = FindObjectOfType<MapSerializer>();
         mapSerializer.Init();
@@ -96,8 +92,5 @@ public class SimulationController : MonoBehaviour
         intersectionChecker.Init(NumAgents, mapSerializer.ObastacleMapLines.ToArray(), tmpLines2.ToArray());
 
         manhattanPopulationController.InitPopulation(true);*/
-
-
-
     }
 }

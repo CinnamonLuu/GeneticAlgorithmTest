@@ -1,13 +1,12 @@
-using UnityEngine;
 using Mono.Data.Sqlite;
-using System;
+using UnityEngine;
 
 public class SimulationDatabase : MonoBehaviour
 {
     private static string dbName = "URI=file:Simulation.db";
-    void Start()
-    {
 
+    private void Start()
+    {
         CreateDB();
     }
 
@@ -45,7 +44,6 @@ public class SimulationDatabase : MonoBehaviour
                     ");";
                 command.ExecuteNonQuery();
             }
-
         }
     }
 
@@ -63,22 +61,21 @@ public class SimulationDatabase : MonoBehaviour
                     case TypeOfDistance.Manhattan:
                         typeName = "Manhattan";
                         break;
+
                     case TypeOfDistance.Euclidean:
                         typeName = "Euclidean";
                         break;
+
                     case TypeOfDistance.Chebyshev:
                         typeName = "Chebyshev";
                         break;
-
                 }
 
                 command.CommandText = "INSERT INTO simulations (distanceType, startingNumAgents, elitism, cutoff, mutationChance, parentMutationWeight, usesPoisson, firstSuccessfulIteration)" +
-                    "VALUES ('" + typeName + "', '" + startingNumAgents + "', '" + elitism + "', '" + cutoff + "', '" + mutationChance + "', '" + parentMutationWeight + "', '" + (usesPoisson?1:0) + "', '" + iterationID + "');";
+                    "VALUES ('" + typeName + "', '" + startingNumAgents + "', '" + elitism + "', '" + cutoff + "', '" + mutationChance + "', '" + parentMutationWeight + "', '" + (usesPoisson ? 1 : 0) + "', '" + iterationID + "');";
 
                 command.ExecuteNonQuery();
-
             }
-
         }
     }
 
@@ -90,28 +87,26 @@ public class SimulationDatabase : MonoBehaviour
 
             using (SqliteCommand command = connection.CreateCommand())
             {
-
                 string typeName = "";
                 switch (distanceType)
                 {
                     case TypeOfDistance.Manhattan:
                         typeName = "Manhattan";
                         break;
+
                     case TypeOfDistance.Euclidean:
                         typeName = "Euclidean";
                         break;
+
                     case TypeOfDistance.Chebyshev:
                         typeName = "Chebyshev";
                         break;
-
                 }
                 command.CommandText = "INSERT INTO iterations (distanceType, currentIteration, successRatio, numSuccessfulAgents, numCrashedAgents)" +
                     "VALUES ('" + typeName + "', '" + currentIteration + "', '" + successRatio + "', '" + numSuccessfulAgents + "', '" + numCrashedAgents + "');";
 
                 command.ExecuteNonQuery();
-
             }
-
         }
     }
 }

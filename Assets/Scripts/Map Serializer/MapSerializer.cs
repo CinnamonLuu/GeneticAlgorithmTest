@@ -1,13 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MapSerializer: MonoBehaviour
+public class MapSerializer : MonoBehaviour
 {
     public List<Line> ObastacleMapLines = new List<Line>();
     public List<Vector2> points = new List<Vector2>();
-    GameObject[] obstaclesInScene;
+    private GameObject[] obstaclesInScene;
 
     public Transform spawnPosition;
     public Transform targetPosition;
@@ -76,7 +75,6 @@ public struct Line
 {
     public Vector2 PointA;
     public Vector2 PointB;
-
 
     public Line(Vector2 a, Vector2 b)
     {

@@ -90,6 +90,7 @@ public class PopulationController : MonoBehaviour
     public void InitPopulation(bool initializeWithSimulationController = true, bool getGPUData = false)
     {
         creaturePrefab = Resources.Load<GameObject>("Creature");
+        //creaturePrefab = Resources.Load<GameObject>("Agent");
 
         if (SimulationController.Instance)
         {
