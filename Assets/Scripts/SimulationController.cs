@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -36,8 +35,9 @@ public class SimulationController : MonoBehaviour
     /*--------------------------------------------------------------- */
 
     //TEMPORAL
-    public List<DNA_DataSimulation> temporalGPUValidator = new List<DNA_DataSimulation>();
+    public List<Line> tmpLines = new List<Line>();
 
+    public List<DNA_DataSimulation> temporalGPUValidator = new List<DNA_DataSimulation>();
 
     public void Awake()
     {
@@ -85,12 +85,11 @@ public class SimulationController : MonoBehaviour
         FindObjectOfType<Camera>().enabled = false;
         SceneManager.LoadScene(sceneIndex, LoadSceneMode.Additive);
     }
-   
+
     private void InitializeGPUSimulation()
     {
         FindObjectOfType<Camera>().enabled = false;
         SceneManager.LoadScene(dataSimulationSceneIndex, LoadSceneMode.Additive);
-
 
         /*mapSerializer = FindObjectOfType<MapSerializer>();
         mapSerializer.Init();

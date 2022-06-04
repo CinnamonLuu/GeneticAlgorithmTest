@@ -1,18 +1,12 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GPUIntersectionChecker
 {
-
     public int[] _agentCrashed;
     public bool[] _agentCrashedBool;
-
     private Line[] _obstacleBounds;
-
     private Line[] _agentsPathLines;
-
     public Line[] AgentsPathLines { get => _agentsPathLines; set => _agentsPathLines = value; }
     public Line[] ObstacleBounds { get => _obstacleBounds; set => _obstacleBounds = value; }
 
@@ -99,7 +93,7 @@ public class GPUIntersectionChecker
         ComputeBuffer pathLines = new ComputeBuffer(_agentsPathLines.Length, totalSize);
         ComputeBuffer agentsCrashed = new ComputeBuffer(_agentCrashed.Length, sizeof(int));
 
-        //int kernelIndex = ComputeShader.FindKernel("LineIntersection");
+        int kernelIndex = computeShader.FindKernel("LineIntersection");
 
         obstacleLines.SetData(ObstacleBounds);
         computeShader.SetBuffer(0, obstacleBoundsArrayID, obstacleLines);
@@ -112,7 +106,7 @@ public class GPUIntersectionChecker
 
         computeShader.SetInt("numMovements", SimulationController.Instance.NumMovements);
 
-        computeShader.Dispatch(0, Mathf.CeilToInt(_obstacleBounds.Length / 8), Mathf.CeilToInt(_agentsPathLines.Length / 8), 1);
+        computeShader.Dispatch(kernelIndex, Mathf.CeilToInt(_obstacleBounds.Length / 8), Mathf.CeilToInt(_agentsPathLines.Length / 8), 1);
 
         agentsCrashed.GetData(_agentCrashed);
 
@@ -124,6 +118,7 @@ public class GPUIntersectionChecker
         {
             Debug.Log($"{i}: {_agentCrashed[i]}");
         }
-        //introduce data in data base
+
+        //TODO: introduce data in data base
     }
 }

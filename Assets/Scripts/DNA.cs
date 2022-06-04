@@ -1,7 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public class DNA
 {
     public List<Vector2> genes = new List<Vector2>();
@@ -15,13 +15,12 @@ public class DNA
         }
     }
 
-
-    public DNA(DNA parent, DNA partner, float mutationRate = 0.01f, float mutationWeight = 0.5f)
+    public DNA(DNA parent, DNA partner, float mutationChance = 0.01f, float mutationWeight = 0.5f)
     {
         for (int i = 0; i < parent.genes.Count; i++)
         {
-            float mutationChance = Random.Range(0.0f, 1.0f);
-            if (mutationChance <= mutationRate)
+            float randomChance = Random.Range(0.0f, 1.0f);
+            if (randomChance <= mutationChance)
             {
                 Vector2 randomMovement = new Vector2(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f));
                 Vector2 mutatedMovement = (parent.genes[i] * mutationWeight + randomMovement * (1 - mutationWeight)) / 2;
