@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public enum SimulationMap 
-{ 
-    DiagonalObstacles, 
-    DiagonalObstacles1, 
+public enum SimulationMap
+{
+    DiagonalObstacles,
+    DiagonalObstacles1,
     StraightObstacles,
     StraightObstacles1
 }
@@ -28,10 +28,14 @@ public class SimulationController : MonoBehaviour
     public int NumAgents;
     public int NumMovements;
     public SimulationMap map;
+    public int[] compareAlgorithmsIndexes;
+    public int[] mapScenesIndexes;
+
+    public GameObject mainMenuPanel;
+    public GameObject mapsPanel;
     /*--------------------------------------------------------------- */
 
     //TEMPORAL
-    public List<Line> tmpLines = new List<Line>();
     public List<DNA_DataSimulation> temporalGPUValidator = new List<DNA_DataSimulation>();
 
 
@@ -49,26 +53,42 @@ public class SimulationController : MonoBehaviour
 
     public void Start()
     {
-        if (visualSimulation)
-        {
-            InitializeCPUSimulation();
-        }
-        else
-        {
-            InitializeGPUSimulation();
-        }
-        FindObjectOfType<Camera>().enabled = false;
+        mainMenuPanel.SetActive(true);
+        mapsPanel.SetActive(false);
+        //if (visualSimulation)
+        //{
+        //    InitializeCPUSimulation();
+        //}
+        //else
+        //{
+        //    InitializeGPUSimulation();
+        //}
+        //FindObjectOfType<Camera>().enabled = false;
     }
 
-    private void InitializeCPUSimulation()
+    public void OpenMapsPanel()
     {
+        mapsPanel.SetActive(true);
+        mainMenuPanel.SetActive(false);
+    }
 
-        SceneManager.LoadScene(visualSimulationSceneIndex, LoadSceneMode.Additive);
+    public void OpenMainMenuPanel()
+    {
+        mainMenuPanel.SetActive(true);
+        mapsPanel.SetActive(false);
+    }
+
+    public void InitializeCPUSimulation(int sceneIndex)
+    {
+        mainMenuPanel.SetActive(false);
+        mapsPanel.SetActive(false);
+        FindObjectOfType<Camera>().enabled = false;
+        SceneManager.LoadScene(sceneIndex, LoadSceneMode.Additive);
     }
    
     private void InitializeGPUSimulation()
     {
-
+        FindObjectOfType<Camera>().enabled = false;
         SceneManager.LoadScene(dataSimulationSceneIndex, LoadSceneMode.Additive);
 
 
@@ -96,8 +116,5 @@ public class SimulationController : MonoBehaviour
         intersectionChecker.Init(NumAgents, mapSerializer.ObastacleMapLines.ToArray(), tmpLines2.ToArray());
 
         manhattanPopulationController.InitPopulation(true);*/
-
-
-
     }
 }

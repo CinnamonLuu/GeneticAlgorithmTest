@@ -69,7 +69,10 @@ public class PopulationController : MonoBehaviour
 
     private void Start()
     {
-        InitPopulation();
+        //if (!SimulationController.Instance)
+        //{
+        //    InitPopulation();
+        //}
     }
 
     private void Update()

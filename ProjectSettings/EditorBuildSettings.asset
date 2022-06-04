@@ -8,4 +8,16 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/TestGPU.unity
     guid: 2cda990e2423bbf4892e6590ba056729
+  - enabled: 1
+    path: Assets/Scenes/Maps/Test_DiagonalObstacles.unity
+    guid: 583df27efa209314baccd3751094800b
+  - enabled: 1
+    path: Assets/Scenes/Maps/Test_DiagonalObstacles 1.unity
+    guid: 29ea46242541e1142bec8064448acd35
+  - enabled: 1
+    path: Assets/Scenes/Maps/Test_StraightObstacles.unity
+    guid: 893e1d4668942274b891408d8d25e9cf
+  - enabled: 1
+    path: Assets/Scenes/Maps/Test_StraightObstacles 1.unity
+    guid: ad0193df7c04e254f89fc0193dacda97
   m_configObjects: {}
