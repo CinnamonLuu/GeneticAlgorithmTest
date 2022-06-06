@@ -63,7 +63,7 @@ public class GeneticPathFinder : MonoBehaviour
     private void Update()
     {
         //TODO: Check if necessary
-        if (SimulationController.Instance && !SimulationController.Instance.visualSimulation) return;
+        //if (SimulationController.Instance && !SimulationController.Instance.visualSimulation) return;
 
         if (hasBeenInitialized && !hasFinished)
         {

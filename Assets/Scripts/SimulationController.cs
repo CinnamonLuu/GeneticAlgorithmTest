@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 public enum SimulationMap
@@ -17,11 +18,6 @@ public class SimulationController : MonoBehaviour
     public static SimulationController Instance => instance;
     /*--------------------------------------------------------------- */
 
-    /*---------------------------CONSTS------------------------------ */
-    public const int visualSimulationSceneIndex = 1;
-    public const int dataSimulationSceneIndex = 2;
-    /*--------------------------------------------------------------- */
-
     /*---------------------CONFIGURABLE INFO------------------------- */
     public bool visualSimulation = true;
     public int NumAgents;
@@ -31,6 +27,7 @@ public class SimulationController : MonoBehaviour
     public int[] mapScenesIndexes;
 
     public GameObject mainMenuPanel;
+    public GameObject simulationTypePanel;
     public GameObject mapsPanel;
     /*--------------------------------------------------------------- */
 
@@ -38,6 +35,12 @@ public class SimulationController : MonoBehaviour
     public List<Line> tmpLines = new List<Line>();
 
     public List<DNA_DataSimulation> temporalGPUValidator = new List<DNA_DataSimulation>();
+
+    private GameObject scaneCamera;
+    private GameObject eventSystem;
+
+    private enum SimulationType { CompareAlgorithms, IndividualAlgorithms};
+    private SimulationType type;
 
     public void Awake()
     {
@@ -54,7 +57,10 @@ public class SimulationController : MonoBehaviour
     public void Start()
     {
         mainMenuPanel.SetActive(true);
+        simulationTypePanel.SetActive(false);
         mapsPanel.SetActive(false);
+        scaneCamera = FindObjectOfType<Camera>().gameObject;
+        eventSystem = FindObjectOfType<EventSystem>().gameObject;
         //if (visualSimulation)
         //{
         //    InitializeCPUSimulation();
@@ -69,27 +75,81 @@ public class SimulationController : MonoBehaviour
     public void OpenMapsPanel()
     {
         mapsPanel.SetActive(true);
+        simulationTypePanel.SetActive(false);
         mainMenuPanel.SetActive(false);
     }
-
     public void OpenMainMenuPanel()
     {
         mainMenuPanel.SetActive(true);
+        simulationTypePanel.SetActive(false);
+        mapsPanel.SetActive(false);
+    }
+    public void OpenSimulationTypePanel()
+    {
+        simulationTypePanel.SetActive(true); 
+        mainMenuPanel.SetActive(false);
         mapsPanel.SetActive(false);
     }
 
-    public void InitializeCPUSimulation(int sceneIndex)
+    public void SetVisualSimulation()
+    {
+        visualSimulation = true;
+    }
+    public void SetDataSimulation()
+    {
+        visualSimulation = false;
+    }
+
+    public void SetCompareAlgorithms()
+    {
+        type = SimulationType.CompareAlgorithms;
+    }
+
+    public void SetIndividualAlgorithm()
+    {
+        type = SimulationType.IndividualAlgorithms;
+    }
+
+
+    public void InitializeSimulation(int sceneIndex)
     {
         mainMenuPanel.SetActive(false);
         mapsPanel.SetActive(false);
-        FindObjectOfType<Camera>().enabled = false;
-        SceneManager.LoadScene(sceneIndex, LoadSceneMode.Additive);
+
+        scaneCamera.SetActive(false);
+        eventSystem.SetActive(false);
+
+        if (type == SimulationType.CompareAlgorithms)
+        {
+            SceneManager.LoadScene(compareAlgorithmsIndexes[sceneIndex], LoadSceneMode.Additive);
+        }
+        if (type == SimulationType.IndividualAlgorithms)
+        {
+            SceneManager.LoadScene(mapScenesIndexes[sceneIndex], LoadSceneMode.Additive);
+        }
+    }
+
+    private void InitializeCPUSimulation(int sceneIndex)
+    {
+        if (type == SimulationType.CompareAlgorithms)
+        {
+            SceneManager.LoadScene(compareAlgorithmsIndexes[sceneIndex], LoadSceneMode.Additive);
+        }
+        if (type == SimulationType.IndividualAlgorithms)
+        {
+            SceneManager.LoadScene(mapScenesIndexes[sceneIndex], LoadSceneMode.Additive);
+        }
     }
 
     private void InitializeGPUSimulation()
     {
-        FindObjectOfType<Camera>().enabled = false;
-        SceneManager.LoadScene(dataSimulationSceneIndex, LoadSceneMode.Additive);
+        mainMenuPanel.SetActive(false);
+        mapsPanel.SetActive(false);
+
+        scaneCamera.SetActive(false);
+        eventSystem.SetActive(false);
+
+        //SceneManager.LoadScene(dataSimulationSceneIndex, LoadSceneMode.Additive);
 
         /*mapSerializer = FindObjectOfType<MapSerializer>();
         mapSerializer.Init();
