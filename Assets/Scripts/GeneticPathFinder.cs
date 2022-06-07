@@ -15,9 +15,6 @@ public class GeneticPathFinder : MonoBehaviour
     private float creatureSpeed = 20;
     private float rotationSpeed = 180;
 
-    //this variable is useless unless implemented in gpu, probably should be removed
-    public float pathMultiplier = .5f;
-
     private Vector2 nextPoint;
 
     protected Vector2 target;
@@ -78,7 +75,7 @@ public class GeneticPathFinder : MonoBehaviour
             }
             if ((Vector2)transform.position == nextPoint)
             {
-                nextPoint = (Vector2)transform.position + dna.genes[pathIndex] * pathMultiplier;
+                nextPoint = (Vector2)transform.position + dna.genes[pathIndex];
                 travelledPath.Add(nextPoint);
                 targetRotation = LookAt2D(nextPoint);
                 pathIndex++;

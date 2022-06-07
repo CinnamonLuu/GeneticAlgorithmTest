@@ -18,8 +18,11 @@ public class SimulationController : MonoBehaviour
     /*--------------------------------------------------------------- */
 
     /*---------------------------CONSTS------------------------------ */
-    public const int visualSimulationSceneIndex = 1;
-    public const int dataSimulationSceneIndex = 2;
+    public const int VISUAL_SIMULATION_SCENE_INDEX = 1;
+    public const int DATA_SIMULATION_SCENE_INDEX = 2;
+
+    public const float STEP_LENGHT_MULTIPLAYER_HIGH = 1f;
+    public const float STEP_LENGHT_MULTIPLAYER_LOW = 0.5f;
     /*--------------------------------------------------------------- */
 
     /*---------------------CONFIGURABLE INFO------------------------- */
@@ -29,6 +32,9 @@ public class SimulationController : MonoBehaviour
     public SimulationMap map;
     public int[] compareAlgorithmsIndexes;
     public int[] mapScenesIndexes;
+
+    [Range(0.2f,1.0f)]
+    public float stepLengthMultiplier = 0.5f;
 
     public GameObject mainMenuPanel;
     public GameObject mapsPanel;
@@ -78,6 +84,11 @@ public class SimulationController : MonoBehaviour
         mapsPanel.SetActive(false);
     }
 
+    public void OUT_SetPathMultiplierValue(float value)
+    {
+        stepLengthMultiplier = value;
+    }
+
     public void InitializeCPUSimulation(int sceneIndex)
     {
         mainMenuPanel.SetActive(false);
@@ -89,7 +100,7 @@ public class SimulationController : MonoBehaviour
     private void InitializeGPUSimulation()
     {
         FindObjectOfType<Camera>().enabled = false;
-        SceneManager.LoadScene(dataSimulationSceneIndex, LoadSceneMode.Additive);
+        SceneManager.LoadScene(DATA_SIMULATION_SCENE_INDEX, LoadSceneMode.Additive);
 
         /*mapSerializer = FindObjectOfType<MapSerializer>();
         mapSerializer.Init();

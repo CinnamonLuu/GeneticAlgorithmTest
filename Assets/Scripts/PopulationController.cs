@@ -29,6 +29,7 @@ public class PopulationController : MonoBehaviour
     [Range(0f, 1f)]
     [Tooltip("Weight applied to the parent movement, at 0 the movement will be completely random")]
     public float parentMutationWeight = 0.5f;
+    private float _stepPathMultiplayer;
 
     [Header("Simulation Config")]
     public bool usesPoissonBin;
@@ -90,10 +91,12 @@ public class PopulationController : MonoBehaviour
         }
     }
 
-    public void InitPopulation(bool initializeWithSimulationController = true, bool getGPUData = false)
+    public void InitPopulation(float stepPathMultiplier, bool initializeWithSimulationController = true, bool getGPUData = false)
     {
-        creaturePrefab = Resources.Load<GameObject>("Creature");
-        //creaturePrefab = Resources.Load<GameObject>("Agent");
+        //creaturePrefab = Resources.Load<GameObject>("Creature");
+        creaturePrefab = Resources.Load<GameObject>("Agent");
+
+        _stepPathMultiplayer = stepPathMultiplier;
 
         if (SimulationController.Instance)
         {
@@ -112,7 +115,6 @@ public class PopulationController : MonoBehaviour
                 for (int i = 0; i < SimulationController.Instance.NumAgents; i++)
                 {
                     dna = new DNA(SimulationController.Instance.NumMovements);
-                    //SimulationController.Instance.
                 }
             }
         }
@@ -150,7 +152,7 @@ public class PopulationController : MonoBehaviour
         geneticPathFinder.crashed += IncreseCrashed;
         if (!getGPUData)
         {
-            geneticPathFinder.InitCreature(new DNA(genomeLenght), targetPoint.position, spawnPoint.position);
+            geneticPathFinder.InitCreature(new DNA(_stepPathMultiplayer, genomeLenght), targetPoint.position, spawnPoint.position);
         }
         else
         {
@@ -183,7 +185,14 @@ public class PopulationController : MonoBehaviour
             }
             else
             {
-                population[i].InitCreature(new DNA(survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationChance, parentMutationWeight), targetPoint.position, spawnPoint.position);
+                //TODO: check why argument out of range
+                population[i].InitCreature(
+                    new DNA(_stepPathMultiplayer, survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationChance, parentMutationWeight),
+                        targetPoint.position, spawnPoint.position);
+                
+                //population[i].InitCreature(
+                //    new DNA(_stepPathMultiplayer, survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationChance, parentMutationWeight),
+                //        targetPoint.position, spawnPoint.position);
             }
         }
         ResetUIVariables();

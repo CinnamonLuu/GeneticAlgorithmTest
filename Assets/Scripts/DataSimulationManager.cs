@@ -15,6 +15,6 @@ public class DataSimulationManager : MonoBehaviour
         mapSerializer.Init();
 
         intersectionChecker = new GPUIntersectionChecker();
-        intersectionChecker.Init(SimulationController.Instance.NumAgents, mapSerializer.ObastacleMapLines.ToArray(), mapSerializer.spawnPosition.position);
+        intersectionChecker.Init(SimulationController.Instance.NumAgents, SimulationController.Instance.stepLengthMultiplier, mapSerializer.ObastacleMapLines.ToArray(), mapSerializer.spawnPosition.position);
     }
 }

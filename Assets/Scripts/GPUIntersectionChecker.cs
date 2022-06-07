@@ -17,14 +17,14 @@ public class GPUIntersectionChecker
 
     private ComputeShader computeShader;
 
-    public void Init(int numAgents, Line[] obstacleBounds, Vector2 spawnPoint)
+    public void Init(int numAgents, float stepPathMultiplier, Line[] obstacleBounds, Vector2 spawnPoint)
     {
         _agentCrashed = new int[numAgents];
         _obstacleBounds = obstacleBounds;
         List<Line> agentsPathLines = new List<Line>();
         for (int i = 0; i < numAgents; i++)
         {
-            agentsPathLines.AddRange(new DNA_DataSimulation(spawnPoint, SimulationController.Instance.NumMovements).lines);
+            agentsPathLines.AddRange(new DNA_DataSimulation(stepPathMultiplier, spawnPoint, SimulationController.Instance.NumMovements).lines);
         }
         _agentsPathLines = agentsPathLines.ToArray();
 
@@ -89,30 +89,30 @@ public class GPUIntersectionChecker
     {
         int vec2Size = sizeof(float) * 2;
         int totalSize = vec2Size * 2;
-        ComputeBuffer obstacleLines = new ComputeBuffer(_obstacleBounds.Length, totalSize);
-        ComputeBuffer pathLines = new ComputeBuffer(_agentsPathLines.Length, totalSize);
-        ComputeBuffer agentsCrashed = new ComputeBuffer(_agentCrashed.Length, sizeof(int));
+        ComputeBuffer bufferObstacleLines = new ComputeBuffer(_obstacleBounds.Length, totalSize);
+        ComputeBuffer bufferPathLines = new ComputeBuffer(_agentsPathLines.Length, totalSize);
+        ComputeBuffer bufferAgentsCrashed = new ComputeBuffer(_agentCrashed.Length, sizeof(int));
 
         int kernelIndex = computeShader.FindKernel("LineIntersection");
 
-        obstacleLines.SetData(ObstacleBounds);
-        computeShader.SetBuffer(0, obstacleBoundsArrayID, obstacleLines);
+        bufferObstacleLines.SetData(ObstacleBounds);
+        computeShader.SetBuffer(0, obstacleBoundsArrayID, bufferObstacleLines);
 
-        pathLines.SetData(AgentsPathLines);
-        computeShader.SetBuffer(0, agentPathArrayID, pathLines);
+        bufferPathLines.SetData(AgentsPathLines);
+        computeShader.SetBuffer(0, agentPathArrayID, bufferPathLines);
 
-        agentsCrashed.SetData(_agentCrashed);
-        computeShader.SetBuffer(0, agentCrashedArrayID, agentsCrashed);
+        bufferAgentsCrashed.SetData(_agentCrashed);
+        computeShader.SetBuffer(0, agentCrashedArrayID, bufferAgentsCrashed);
 
         computeShader.SetInt("numMovements", SimulationController.Instance.NumMovements);
 
         computeShader.Dispatch(kernelIndex, Mathf.CeilToInt(_obstacleBounds.Length / 8), Mathf.CeilToInt(_agentsPathLines.Length / 8), 1);
 
-        agentsCrashed.GetData(_agentCrashed);
+        bufferAgentsCrashed.GetData(_agentCrashed);
 
-        obstacleLines.Dispose();
-        pathLines.Dispose();
-        agentsCrashed.Dispose();
+        bufferObstacleLines.Dispose();
+        bufferPathLines.Dispose();
+        bufferAgentsCrashed.Dispose();
 
         for (int i = 0; i < _agentCrashed.Length; i++)
         {

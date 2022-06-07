@@ -10,7 +10,7 @@ public class VisualSimulationManager : MonoBehaviour
     {
         foreach (PopulationController pc in populationControllers)
         {
-            pc.InitPopulation();
+            pc.InitPopulation(SimulationController.Instance.stepLengthMultiplier);
         }
     }
 }
