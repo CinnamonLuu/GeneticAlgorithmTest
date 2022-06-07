@@ -1,5 +1,11 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel LineIntersection
+#pragma kernel CalculateObstacleIntersection
+#pragma kernel CalculateObstacleMultiplier
+#pragma kernel CalculateFitness
+#pragma kernel CalculateDistanceManhattan
+#pragma kernel CalculateDistanceEuclidean
+#pragma kernel CalculateDistanceChevyshev
 
 struct Line
 {
@@ -7,11 +13,42 @@ struct Line
 	float2 pointB;
 };
 
+struct Obstacle
+{
+	RWStructuredBuffer<Line> obstacleLines;
+};
+
+    /*-------------------------INTERSECTION----------------------------- */
+
+int numMovements;
+
 RWStructuredBuffer<Line> _obstacleBounds;
 RWStructuredBuffer<Line> _path;
 RWStructuredBuffer<int> _intersects;
 
-int numMovements;
+
+    /*-------------------------OBSTACLES----------------------------- */
+
+int numObstacles;
+
+RWStructuredBuffer<Obstacle> _obstacles;
+RWStructuredBuffer<int> _numObstacleIntersection;
+
+
+
+    /*-------------------------FITNESS----------------------------- */
+
+
+RWStructuredBuffer<float> _obstacleMultiplier;
+
+
+RWStructuredBuffer<float> _fitness;
+
+    /*-------------------------DISTANCES----------------------------- */
+float2 _targetPoint;
+
+RWStructuredBuffer<float2> _lastAgentPosition;
+RWStructuredBuffer<float> _distances;
 
 
 bool IsPointsOnDifferentSides(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
@@ -59,3 +96,52 @@ void LineIntersection(uint3 id : SV_DispatchThreadID)
 		_intersects[id.y / numMovements] = 0;
 	
 }
+
+[numthreads(8, 8, 1)]
+void CalculateObstacleIntersection()
+{
+	for (int i = 0; i < numObstacles; i++)
+	{
+		
+	}
+
+}
+
+[numthreads(8, 8, 1)]
+void CalculateObstacleMultiplier(uint3 id : SV_DispatchThreadID)
+{
+	_obstacleMultiplier[id.x] = 1f - (0.1f * _numObstacleIntersection[idy]);
+
+}
+
+[numthreads(8, 8, 1)]
+void CalculateFitness(uint3 id : SV_DispatchThreadID)
+{
+	_fitness[id.x / numObstacles] =
+					60 / _distances[id.x / numObstacles]
+					* (_intersects[id] == 1 ? 0.65f : 1)
+					* _obstacleMultiplier[id];
+	
+}
+
+[numthreads(8, 8, 1)]
+void CalculateDistanceManhattan(uint3 id : SV_DispatchThreadID)
+{
+	_distances[id.x] = abs(_lastAgentPosition[id.x].x - _targetPoint.x)
+						* abs(_lastAgentPosition[id.x].y - _targetPoint.y);
+}
+
+[numthreads(8, 8, 1)]
+void CalculateDistanceEuclidean(uint3 id : SV_DispatchThreadID)
+{
+	_distances[id.x] = distance(_lastAgentPosition[id.x], _targetPoint);
+}
+
+[numthreads(8, 8, 1)]
+void CalculateDistanceChevyshev(uint3 id : SV_DispatchThreadID)
+{
+	_distances[id.x] = max(_lastAgentPosition[id.x].x - _targetPoint.x,
+							_lastAgentPosition[id.x].y - _targetPoint.y);
+
+}
+
