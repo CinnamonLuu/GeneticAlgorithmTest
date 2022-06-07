@@ -21,7 +21,7 @@ public class PopulationController : MonoBehaviour
 
     [Header("Population Parameters")]
     [Tooltip("NumAgents")] public int populationSize = 100;
-    [Tooltip("NumMovements")] public int genomeLenght;
+    [Tooltip("NumMovements")] public int genomeLenght = 50;
     public float cutoff = 0.3f;
     [Tooltip("Elitism")] public int survivorKeep = 5;
     public TypeOfDistance distanceType;
@@ -53,7 +53,7 @@ public class PopulationController : MonoBehaviour
         set
         {
             arrived = value;
-            //uiUpdater.ArrivedNumber = arrived.ToString();
+            uiUpdater.ArrivedNumber = arrived.ToString();
         }
     }
     public int NoArrived
@@ -86,45 +86,28 @@ public class PopulationController : MonoBehaviour
         if (!HasActive())
         {
             SimulationDatabase.AddIteration(distanceType, iterationCounter, arrived / populationSize, arrived, crashed);
-
             NextGeneration();
         }
     }
 
-    public void InitPopulation(float stepPathMultiplier, bool initializeWithSimulationController = true, bool getGPUData = false)
+    public void SetInitialVariables(int populationSize,int genomeLenght)
+    {
+        this.populationSize = populationSize;
+        this.genomeLenght = genomeLenght;
+    }
+
+    public void InitPopulation(bool initializeWithSimulationController = true, bool getGPUData = false)
     {
         //creaturePrefab = Resources.Load<GameObject>("Creature");
         creaturePrefab = Resources.Load<GameObject>("Agent");
 
         _stepPathMultiplayer = stepPathMultiplier;
 
-        if (SimulationController.Instance)
+
+        for (int i = 0; i < populationSize; i++)
         {
-            if (SimulationController.Instance.visualSimulation)
-            {
-                GeneticPathFinder geneticPathFinder;
-                for (int i = 0; i < SimulationController.Instance.NumAgents; i++)
-                {
-                    geneticPathFinder = GenerateAgent(getGPUData, i);
-                    population.Add(geneticPathFinder);
-                }
-            }
-            else
-            {
-                DNA dna;
-                for (int i = 0; i < SimulationController.Instance.NumAgents; i++)
-                {
-                    dna = new DNA(SimulationController.Instance.NumMovements);
-                }
-            }
-        }
-        else
-        {
-            for (int i = 0; i < populationSize; i++)
-            {
-                GeneticPathFinder geneticPathFinder = GenerateAgent();
-                population.Add(geneticPathFinder);
-            }
+            GeneticPathFinder geneticPathFinder = GenerateAgent();
+            population.Add(geneticPathFinder);
         }
         initialized = true;
     }
@@ -150,13 +133,13 @@ public class PopulationController : MonoBehaviour
         }
         geneticPathFinder.finished += IncreseArrived;
         geneticPathFinder.crashed += IncreseCrashed;
-        if (!getGPUData)
+        if (getGPUData)
         {
-            geneticPathFinder.InitCreature(new DNA(_stepPathMultiplayer, genomeLenght), targetPoint.position, spawnPoint.position);
+            geneticPathFinder.InitCreature(SimulationController.Instance.temporalGPUValidator[index], targetPoint.position, spawnPoint.position);
         }
         else
         {
-            geneticPathFinder.InitCreature(SimulationController.Instance.temporalGPUValidator[index], targetPoint.position, spawnPoint.position);
+            geneticPathFinder.InitCreature(new DNA(genomeLenght), targetPoint.position, spawnPoint.position);
         }
         return geneticPathFinder;
     }
@@ -165,7 +148,7 @@ public class PopulationController : MonoBehaviour
     {
         int survivorCut = Mathf.RoundToInt(populationSize * cutoff);
         List<GeneticPathFinder> survivors = new List<GeneticPathFinder>(population);
-        // //uiUpdater.RatioNumber = Ratio;
+        uiUpdater.RatioNumber = Ratio;
 
         if (arrived > survivorKeep)
         {
@@ -209,7 +192,7 @@ public class PopulationController : MonoBehaviour
     public void IncrementIterationCounter()
     {
         iterationCounter++;
-        //uiUpdater.IterationNumber = iterationCounter.ToString();
+        uiUpdater.IterationNumber = iterationCounter.ToString();
     }
 
     private void IncreseArrived()
@@ -219,13 +202,13 @@ public class PopulationController : MonoBehaviour
         if (firstArrivedIteration == 0)
         {
             firstArrivedIteration = iterationCounter;
-            //uiUpdater.FirstArrivedIteration = iterationCounter.ToString();
+            uiUpdater.FirstArrivedIteration = iterationCounter.ToString();
         }
     }
     private void IncreseCrashed()
     {
         crashed++;
-        //uiUpdater.NoArrivedNumber = noArrived.ToString();
+        uiUpdater.NoArrivedNumber = noArrived.ToString();
     }
 
     bool HasActive()
