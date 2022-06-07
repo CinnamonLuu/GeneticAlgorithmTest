@@ -110,18 +110,20 @@ void CalculateObstacleIntersection()
 [numthreads(8, 8, 1)]
 void CalculateObstacleMultiplier(uint3 id : SV_DispatchThreadID)
 {
-	_obstacleMultiplier[id.x] = 1f - (0.1f * _numObstacleIntersection[idy]);
+		//TODO Wrong Indexes
+	_obstacleMultiplier[id.x] = 1 - (0.1 * _numObstacleIntersection[id.y]);
 
 }
 
 [numthreads(8, 8, 1)]
 void CalculateFitness(uint3 id : SV_DispatchThreadID)
 {
+	//TODO Wrong Indexes
 	_fitness[id.x / numObstacles] =
 					60 / _distances[id.x / numObstacles]
-					* (_intersects[id] == 1 ? 0.65f : 1)
-					* _obstacleMultiplier[id];
-	
+					* (_intersects[id.x] == 1 ? 0.65 : 1)
+					* _obstacleMultiplier[id.x];
+
 }
 
 [numthreads(8, 8, 1)]

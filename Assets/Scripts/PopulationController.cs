@@ -90,13 +90,13 @@ public class PopulationController : MonoBehaviour
         }
     }
 
-    public void SetInitialVariables(int populationSize,int genomeLenght)
+    public void SetInitialVariables(int populationSize, int genomeLenght)
     {
         this.populationSize = populationSize;
         this.genomeLenght = genomeLenght;
     }
 
-    public void InitPopulation(bool initializeWithSimulationController = true, bool getGPUData = false)
+    public void InitPopulation(float stepPathMultiplier, bool initializeWithSimulationController = true, bool getGPUData = false)
     {
         //creaturePrefab = Resources.Load<GameObject>("Creature");
         creaturePrefab = Resources.Load<GameObject>("Agent");
@@ -172,7 +172,7 @@ public class PopulationController : MonoBehaviour
                 population[i].InitCreature(
                     new DNA(_stepPathMultiplayer, survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationChance, parentMutationWeight),
                         targetPoint.position, spawnPoint.position);
-                
+
                 //population[i].InitCreature(
                 //    new DNA(_stepPathMultiplayer, survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationChance, parentMutationWeight),
                 //        targetPoint.position, spawnPoint.position);
