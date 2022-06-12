@@ -497,7 +497,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 200c143de8644dc49897014c70508ed2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  populationControllers: []
+  populationControllers:
+  - {fileID: 1769859898}
 --- !u!4 &415589154
 Transform:
   m_ObjectHideFlags: 0
