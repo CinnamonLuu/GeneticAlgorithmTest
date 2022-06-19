@@ -30,6 +30,7 @@ public class SimulationController : MonoBehaviour
     public bool visualSimulation = true;
     public int NumAgents;
     public int NumMovements;
+    public TypeOfDistance typeOfDistance;
     public SimulationMap map;
     public int[] compareAlgorithmsIndexes;
     public int[] mapScenesIndexes;
@@ -39,6 +40,7 @@ public class SimulationController : MonoBehaviour
 
     public GameObject mainMenuPanel;
     public GameObject simulationTypePanel;
+    public GameObject typeOfDistancePanel;
     public GameObject mapsPanel;
     /*--------------------------------------------------------------- */
 
@@ -67,20 +69,16 @@ public class SimulationController : MonoBehaviour
 
     public void Start()
     {
+        OpenMainMenuPanel();
+        scaneCamera = FindObjectOfType<Camera>().gameObject;
+        eventSystem = FindObjectOfType<EventSystem>().gameObject;
+    }
+    public void OpenMainMenuPanel()
+    {
         mainMenuPanel.SetActive(true);
         simulationTypePanel.SetActive(false);
         mapsPanel.SetActive(false);
-        scaneCamera = FindObjectOfType<Camera>().gameObject;
-        eventSystem = FindObjectOfType<EventSystem>().gameObject;
-        //if (visualSimulation)
-        //{
-        //    InitializeCPUSimulation();
-        //}
-        //else
-        //{
-        //    InitializeGPUSimulation();
-        //}
-        //FindObjectOfType<Camera>().enabled = false;
+        typeOfDistancePanel.SetActive(false);
     }
 
     public void OpenMapsPanel()
@@ -88,16 +86,32 @@ public class SimulationController : MonoBehaviour
         mapsPanel.SetActive(true);
         simulationTypePanel.SetActive(false);
         mainMenuPanel.SetActive(false);
+        typeOfDistancePanel.SetActive(false);
     }
-    public void OpenMainMenuPanel()
+
+    public void OpenNextPanel()
     {
-        mainMenuPanel.SetActive(true);
-        simulationTypePanel.SetActive(false);
-        mapsPanel.SetActive(false);
+        if(type== SimulationType.IndividualAlgorithms)
+        {
+            OpenTypeOfDistancePanel();
+        }
+        else
+        {
+            OpenMapsPanel();
+        }
     }
+
     public void OpenSimulationTypePanel()
     {
         simulationTypePanel.SetActive(true); 
+        mainMenuPanel.SetActive(false);
+        mapsPanel.SetActive(false);
+        typeOfDistancePanel.SetActive(false);
+    }
+    public void OpenTypeOfDistancePanel()
+    {
+        typeOfDistancePanel.SetActive(true);
+        simulationTypePanel.SetActive(false); 
         mainMenuPanel.SetActive(false);
         mapsPanel.SetActive(false);
     }
@@ -126,6 +140,10 @@ public class SimulationController : MonoBehaviour
         type = SimulationType.IndividualAlgorithms;
     }
 
+    public void SelectTypeOfDistance(int type)
+    {
+        typeOfDistance = (TypeOfDistance)type;
+    }
 
     public void InitializeSimulation(int sceneIndex)
     {
@@ -166,32 +184,5 @@ public class SimulationController : MonoBehaviour
 
         scaneCamera.SetActive(false);
         eventSystem.SetActive(false);
-
-        //SceneManager.LoadScene(dataSimulationSceneIndex, LoadSceneMode.Additive);
-
-        /*mapSerializer = FindObjectOfType<MapSerializer>();
-        mapSerializer.Init();
-
-        intersectionChecker = new GPUIntersectionChecker();
-
-        List<Line> tmpLines2 = new List<Line>();
-
-        Temporal
-        manhattanPopulationController = new GameObject().AddComponent<PopulationController>();
-        manhattanPopulationController.populationSize = NumAgents;
-        manhattanPopulationController.genomeLenght = NumMovements;
-        manhattanPopulationController.spawnPoint = GameObject.FindGameObjectWithTag("Spawn").transform;
-        manhattanPopulationController.end = GameObject.FindGameObjectWithTag("Target").transform;
-
-        for (int i = 0; i < NumAgents; i++)
-        {
-            temporalGPUValidator.Add(new GPUDna(mapSerializer.spawnPosition.position, NumMovements));
-            tmpLines.AddRange(temporalGPUValidator[i].lines);
-            tmpLines2.Add(new Line(new Vector2(0, i - 4), new Vector2(0, i - 3)));
-        }
-        intersectionChecker.Init(NumAgents, mapSerializer.ObastacleMapLines.ToArray(), tmpLines.ToArray());
-        intersectionChecker.Init(NumAgents, mapSerializer.ObastacleMapLines.ToArray(), tmpLines2.ToArray());
-
-        manhattanPopulationController.InitPopulation(true);*/
     }
 }

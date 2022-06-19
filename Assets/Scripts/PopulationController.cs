@@ -90,10 +90,11 @@ public class PopulationController : MonoBehaviour
         }
     }
 
-    public void SetInitialVariables(int populationSize, int genomeLenght)
+    public void SetInitialVariables(int populationSize, int genomeLenght,TypeOfDistance type)
     {
         this.populationSize = populationSize;
         this.genomeLenght = genomeLenght;
+        this.distanceType = type;
     }
 
     public void InitPopulation(float stepPathMultiplier, bool initializeWithSimulationController = true, bool getGPUData = false)

@@ -12,7 +12,7 @@ public class VisualSimulationManager : MonoBehaviour
         {
             foreach (PopulationController pc in populationControllers)
             {
-                pc.SetInitialVariables(SimulationController.Instance.NumAgents, SimulationController.Instance.NumMovements);
+                pc.SetInitialVariables(SimulationController.Instance.NumAgents, SimulationController.Instance.NumMovements, SimulationController.Instance.typeOfDistance);
             }
         }
     }
