@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class MapSerializer : MonoBehaviour
 {
+    public List<Obstacle> Obstacles = new List<Obstacle>();
     public List<Line> ObastacleMapLines = new List<Line>();
     public List<Vector2> points = new List<Vector2>();
     private GameObject[] obstaclesInScene;
@@ -25,18 +26,25 @@ public class MapSerializer : MonoBehaviour
         {
             sprite = item.GetComponent<BoxCollider2D>();
             rectVertices = GetBoxPoints2D(sprite);
+
+            Obstacle obstacle = new Obstacle();
+            obstacle.ObstacleLines = new Line[4];
             for (int i = 0; i < 4; i++)
             {
+                Line line;
                 if (i == 3)
                 {
-                    ObastacleMapLines.Add(new Line(rectVertices[i], rectVertices[0]));
+                    line = new Line(rectVertices[i], rectVertices[0]);
                 }
                 else
                 {
-                    ObastacleMapLines.Add(new Line(rectVertices[i], rectVertices[i + 1]));
+                    line = new Line(rectVertices[i], rectVertices[i + 1]);
                 }
+                ObastacleMapLines.Add(line);
+                obstacle.ObstacleLines[i] = line;
                 points.Add(rectVertices[i]);
             }
+            Obstacles.Add(obstacle);
         }
         spawnPosition = GameObject.FindGameObjectWithTag("Spawn").transform;
         targetPosition = GameObject.FindGameObjectWithTag("Target").transform;
@@ -83,4 +91,14 @@ public struct Line
     }
 
     public float Distance => Vector2.Distance(PointA, PointB);
+}
+
+public struct Obstacle
+{
+    public Line[] ObstacleLines;
+
+    public Obstacle(Line[] obstacleLines)
+    {
+        this.ObstacleLines = obstacleLines;
+    }
 }
