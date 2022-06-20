@@ -464,7 +464,7 @@ MonoBehaviour:
         m_CallState: 2
       - m_Target: {fileID: 705741580}
         m_TargetAssemblyTypeName: SimulationController, Assembly-CSharp
-        m_MethodName: SetVisualSimulation
+        m_MethodName: OpenMapsPanel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1161,7 +1161,7 @@ MonoBehaviour:
         m_CallState: 2
       - m_Target: {fileID: 705741580}
         m_TargetAssemblyTypeName: SimulationController, Assembly-CSharp
-        m_MethodName: SetDataSimulation
+        m_MethodName: OpenMapsPanel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3034,7 +3034,7 @@ MonoBehaviour:
         m_CallState: 2
       - m_Target: {fileID: 705741580}
         m_TargetAssemblyTypeName: SimulationController, Assembly-CSharp
-        m_MethodName: SetVisualSimulation
+        m_MethodName: OpenMapsPanel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
