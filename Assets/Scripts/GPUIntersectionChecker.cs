@@ -218,13 +218,36 @@ public class GPUIntersectionChecker
         /*-------------------------DISTANCES----------------------------- */
         ComputeBuffer bufferDistances = new ComputeBuffer(_numAgents, sizeof(float));
         bufferDistances.SetData(_distances);
-        computeShader.SetBuffer(calculateDistEuclideanShaderIndex, _distancesID, bufferDistances);
-        computeShader.SetBuffer(calculateDistEuclideanShaderIndex, _lastAgentPositionsID, bufferLastAgentPositions);
+        switch (SimulationController.Instance.typeOfDistance)
+        {
+            case TypeOfDistance.Manhattan:
+                computeShader.SetBuffer(calculateDistManhattanShaderIndex, _distancesID, bufferDistances);
+                computeShader.SetBuffer(calculateDistManhattanShaderIndex, _lastAgentPositionsID, bufferLastAgentPositions);
 
-        computeShader.Dispatch(calculateDistEuclideanShaderIndex,
-                                 Mathf.CeilToInt(_obstacleBounds.Length / 8),
-                                 1,
-                                 1);
+                computeShader.Dispatch(calculateDistManhattanShaderIndex,
+                         Mathf.CeilToInt(_obstacleBounds.Length / 8),
+                         1,
+                         1);
+                break;
+            case TypeOfDistance.Euclidean:
+                computeShader.SetBuffer(calculateDistEuclideanShaderIndex, _distancesID, bufferDistances);
+                computeShader.SetBuffer(calculateDistEuclideanShaderIndex, _lastAgentPositionsID, bufferLastAgentPositions);
+
+                computeShader.Dispatch(calculateDistEuclideanShaderIndex,
+                         Mathf.CeilToInt(_obstacleBounds.Length / 8),
+                         1,
+                         1);
+                break;
+            case TypeOfDistance.Chebyshev:
+                computeShader.SetBuffer(calculateDistChevyshevShaderIndex, _distancesID, bufferDistances);
+                computeShader.SetBuffer(calculateDistChevyshevShaderIndex, _lastAgentPositionsID, bufferLastAgentPositions);
+
+                computeShader.Dispatch(calculateDistChevyshevShaderIndex,
+                         Mathf.CeilToInt(_obstacleBounds.Length / 8),
+                         1,
+                         1);
+                break;
+        }
 
 
         /*-------------------------FITNESS----------------------------- */
