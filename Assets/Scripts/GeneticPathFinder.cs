@@ -29,7 +29,7 @@ public class GeneticPathFinder : MonoBehaviour
     public Action finished;
     public Action crashed;
 
-    public void InitCreature(DNA newDna, Vector2 target, Vector2 beginPoint)
+    public void InitCreature(DNA newDna, Vector2 spawnPoint, Vector2 targetPoint)
     {
         if (!lineRenderer)
         {
@@ -38,11 +38,28 @@ public class GeneticPathFinder : MonoBehaviour
 
         ResetAgent();
 
-        transform.position = beginPoint;
-        nextPoint = transform.position;
-
         dna = newDna;
-        this.target = target;
+        transform.position = spawnPoint;
+        nextPoint = transform.position;
+        target = targetPoint;
+
+        travelledPath.Add(nextPoint);
+        hasBeenInitialized = true;
+    }
+
+    public void InitCreatureRandom(Vector2 spawnPoint, Vector2 targetPoint)
+    {
+        if (!lineRenderer)
+        {
+            lineRenderer = GetComponent<LineRenderer>();
+        }
+
+        ResetAgent();
+
+        dna = new DNA(SimulationController.Instance.stepLengthMultiplier, SimulationController.Instance.NumMovements);
+        transform.position = spawnPoint;
+        nextPoint = transform.position;
+        target = targetPoint;
 
         travelledPath.Add(nextPoint);
         hasBeenInitialized = true;

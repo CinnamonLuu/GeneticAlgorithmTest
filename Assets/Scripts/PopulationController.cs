@@ -42,7 +42,6 @@ public class PopulationController : MonoBehaviour
 
     private bool initialized;
 
-
     List<GeneticPathFinder> population = new List<GeneticPathFinder>();
     public List<Line> PopulationPathLines;
 
@@ -141,11 +140,11 @@ public class PopulationController : MonoBehaviour
         geneticPathFinder.crashed += IncreseCrashed;
         if (getGPUData)
         {
-            geneticPathFinder.InitCreature(SimulationController.Instance.temporalGPUValidator[index], targetPoint.position, spawnPoint.position);
+            geneticPathFinder.InitCreature(SimulationController.Instance.temporalGPUValidator[index], spawnPoint.position, targetPoint.position);
         }
         else
         {
-            geneticPathFinder.InitCreature(new DNA(genomeLenght), targetPoint.position, spawnPoint.position);
+            geneticPathFinder.InitCreature(new DNA(_stepPathMultiplayer ,genomeLenght), spawnPoint.position, targetPoint.position);
         }
         return geneticPathFinder;
     }
@@ -165,23 +164,34 @@ public class PopulationController : MonoBehaviour
 
         survivors = survivors.OrderByDescending(o => o.fitness).ToList();
 
-        //THE BEST AGENTS OF THE POPULATION KEEP THE SAME DNA
-        for (int i = 0; i < populationSize; i++)
+        if (SimulationController.Instance.GenerateRandomData)
         {
-            if (i < survivorKeep)
+            for (int i = 0; i < populationSize; i++)
             {
-                population[i].InitCreature(survivors[i].dna, targetPoint.position, spawnPoint.position);
+                population[i].InitCreatureRandom(spawnPoint.position, targetPoint.position);
             }
-            else
-            {
-                //TODO: check why argument out of range
-                population[i].InitCreature(
-                    new DNA(_stepPathMultiplayer, survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationChance, parentMutationWeight),
-                        targetPoint.position, spawnPoint.position);
+        }
 
-                //population[i].InitCreature(
-                //    new DNA(_stepPathMultiplayer, survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationChance, parentMutationWeight),
-                //        targetPoint.position, spawnPoint.position);
+        else
+        {
+            //THE BEST AGENTS OF THE POPULATION KEEP THE SAME DNA
+            for (int i = 0; i < populationSize; i++)
+            {
+                if (i < survivorKeep)
+                {
+                    population[i].InitCreature(survivors[i].dna, spawnPoint.position, targetPoint.position);
+                }
+                else
+                {
+                    //TODO: check why argument out of range
+                    population[i].InitCreature(
+                        new DNA(_stepPathMultiplayer, survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationChance, parentMutationWeight),
+                            spawnPoint.position, targetPoint.position);
+
+                    //population[i].InitCreature(
+                    //    new DNA(_stepPathMultiplayer, survivors[i % survivorCut].dna, survivors[Random.Range(0, survivorCut)].dna, mutationChance, parentMutationWeight),
+                    //        targetPoint.position, spawnPoint.position);
+                }
             }
         }
         ResetUIVariables();
@@ -228,6 +238,7 @@ public class PopulationController : MonoBehaviour
         }
         return false;
     }
+
 
     private void OnApplicationQuit()
     {

@@ -31,6 +31,7 @@ public class SimulationController : MonoBehaviour
     public bool visualSimulation = true;
     public int NumAgents;
     public int NumMovements;
+    public bool GenerateRandomData = true;
     public TypeOfDistance typeOfDistance;
     public SimulationMap map;
     public int[] compareAlgorithmsIndexes;
