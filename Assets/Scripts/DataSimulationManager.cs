@@ -5,6 +5,7 @@ public class DataSimulationManager : MonoBehaviour
 {
     [SerializeField] private MapSerializer mapSerializer;
     [SerializeField] private GPUIntersectionChecker intersectionChecker;
+    [SerializeField] private LineRenderer lineRenderer;
 
     private void Start()
     {
@@ -15,12 +16,29 @@ public class DataSimulationManager : MonoBehaviour
         mapSerializer.Init();
 
         intersectionChecker = new GPUIntersectionChecker();
-        intersectionChecker.Init( 
-                                    SimulationController.Instance.NumAgents,
-                                    SimulationController.Instance.stepLengthMultiplier,
-                                    mapSerializer.spawnPosition.position,
-                                    mapSerializer.targetPosition.position,
-                                    mapSerializer.ObastacleMapLines.ToArray(),
-                                    mapSerializer.Obstacles.ToArray());
+        if (SimulationController.Instance)
+        {
+
+            intersectionChecker.Init(SimulationController.Instance.NumAgents,
+                                        SimulationController.Instance.NumMovements,
+                                        SimulationController.Instance.stepLengthMultiplier,
+                                        mapSerializer.spawnPosition.position,
+                                        mapSerializer.targetPosition.position,
+                                        mapSerializer.ObastacleMapLines.ToArray(),
+                                        mapSerializer.Obstacles.ToArray(),
+                                        SimulationController.Instance.typeOfDistance);
+        }
+    }
+
+    public void StartSimulation()
+    {
+        intersectionChecker.CheckIntersectionGPU();
+    }
+
+    public void RepresentBestSimulation()
+    {
+        PopulationController populationController = FindObjectOfType<PopulationController>();
+        lineRenderer.SetPositions(intersectionChecker.GetBestSimulation());
+
     }
 }

@@ -6,6 +6,7 @@ public class GPUIntersectionChecker
     private int _numAgents;
     private int _numMovemets;
     private int _numObstacles;
+    private TypeOfDistance typeOfDistance;
 
     /*-------------------------INTERSECTION----------------------------- */
     private Line[] _obstacleBounds;
@@ -53,12 +54,13 @@ public class GPUIntersectionChecker
 
     private ComputeShader computeShader;
 
-    public void Init(int numAgents, float stepPathMultiplier, Vector2 spawnPoint, Vector2 targetPoint, Line[] obstacleBounds, Obstacle[] obstacleArray)
+    public void Init(int numAgents, int numMovements, float stepPathMultiplier, Vector2 spawnPoint, Vector2 targetPoint, Line[] obstacleBounds, Obstacle[] obstacleArray, TypeOfDistance type)
     {
 
-        _numAgents = SimulationController.Instance.NumAgents;
-        _numMovemets = SimulationController.Instance.NumMovements;
+        _numAgents = numAgents;
+        _numMovemets = numMovements;
         _numObstacles = obstacleArray.Length;
+        typeOfDistance = type;
 
         #region Initialize intersection Variables
         _obstacleBounds = obstacleBounds;
@@ -94,7 +96,7 @@ public class GPUIntersectionChecker
         #endregion
 
         computeShader = Resources.Load<ComputeShader>("ComputeShaders/LineSegmentIntersection");
-        CheckIntersectionGPU();
+        //CheckIntersectionGPU();
         //CheckIntersectionCPU();
 
 
@@ -184,7 +186,7 @@ public class GPUIntersectionChecker
         computeShader.SetBuffer(lineIntersectionShaderIndex, _agentCrashedArrayID, bufferAgentsCrashed);
 
         //first crash in agent movement
-        ComputeBuffer bufferFirstCollinsionIndex = new ComputeBuffer(_obstacleBounds.Length, sizeof(int));
+        ComputeBuffer bufferFirstCollinsionIndex = new ComputeBuffer(_numAgents, sizeof(int));
         bufferFirstCollinsionIndex.SetData(_firstCollisionIndex);
         computeShader.SetBuffer(lineIntersectionShaderIndex, _firstCollisionIndexID, bufferFirstCollinsionIndex);
 
@@ -235,7 +237,7 @@ public class GPUIntersectionChecker
 
         computeShader.SetBuffer(calculatFitnessShaderIndex, _obstacleMultiplierID, bufferObstacleMultiplier);
         computeShader.SetBuffer(calculatFitnessShaderIndex, _numObstaclesIntersectedWithID, bufferNumObstaclesIntersectedWith);
-        
+
         computeShader.SetBuffer(calculatFitnessShaderIndex, _fitnessID, bufferFitness);
         computeShader.SetBuffer(calculatFitnessShaderIndex, _distancesID, bufferDistances);
         computeShader.SetBuffer(calculatFitnessShaderIndex, _agentCrashedArrayID, bufferAgentsCrashed);
@@ -271,7 +273,36 @@ public class GPUIntersectionChecker
         {
             Debug.Log($"{i}: {_fitness[i]}");
         }
-
+        if (SimulationController.Instance)
+        {
+            SimulationController.Instance.DataSimulationFinished?.Invoke();
+        }
         //TODO: introduce data in data base
+    }
+
+    public Vector3[] GetBestSimulation()
+    {
+        int arrayIndex = GetBestFitnesssIndex();
+        Vector3[] positions = new Vector3[_numMovemets];
+        for (int i = 0; i < _numMovemets; i++)
+        {
+            positions[i] = _agentsPathLines[i + (_numMovemets * arrayIndex)].PointA;
+        }
+        return positions;
+    }
+
+    public int GetBestFitnesssIndex()
+    {
+        float maxFitness = float.MinValue;
+        int index = 0;
+        for (int i = 0; i < _fitness.Length; i++)
+        {
+            if (_fitness[i] > maxFitness)
+            {
+                maxFitness = _fitness[i];
+                index = i;
+            }
+        }
+        return index;
     }
 }

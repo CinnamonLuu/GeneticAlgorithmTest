@@ -8,11 +8,18 @@ public class VisualSimulationManager : MonoBehaviour
 
     private void Start()
     {
-        if(SimulationController.Instance && SimulationController.Instance.visualSimulation)
+        if (SimulationController.Instance && SimulationController.Instance.visualSimulation)
         {
-            foreach (PopulationController pc in populationControllers)
+            if (SimulationController.Instance.type == SimulationController.SimulationType.IndividualAlgorithms)
             {
-                pc.SetInitialVariables(SimulationController.Instance.NumAgents, SimulationController.Instance.NumMovements, SimulationController.Instance.typeOfDistance);
+                populationControllers[0].SetInitialVariables(SimulationController.Instance.NumAgents, SimulationController.Instance.NumMovements, SimulationController.Instance.typeOfDistance);
+            }
+            else
+            {
+                foreach (PopulationController pc in populationControllers)
+                {
+                    pc.SetInitialVariables(SimulationController.Instance.NumAgents, SimulationController.Instance.NumMovements);
+                }
             }
         }
     }

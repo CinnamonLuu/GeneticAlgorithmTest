@@ -1033,6 +1033,67 @@ Transform:
   m_Father: {fileID: 1091673650}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &199624680
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 199624683}
+  - component: {fileID: 199624682}
+  - component: {fileID: 199624681}
+  m_Layer: 0
+  m_Name: DataSimulationManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &199624681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 199624680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ace33e5f1dde2f3479e0dd6b937fb359, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObastacleMapLines: []
+  points: []
+  spawnPosition: {fileID: 1081013634}
+  targetPosition: {fileID: 1866608731}
+--- !u!114 &199624682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 199624680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca7d19813e327d1469afa2117c069295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mapSerializer: {fileID: 199624681}
+--- !u!4 &199624683
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 199624680}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1116.542, y: 460.90204, z: -527.88367}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &214899879
 GameObject:
   m_ObjectHideFlags: 0
@@ -1097,7 +1158,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &296325370
 GameObject:
@@ -1912,7 +1973,7 @@ Transform:
   - {fileID: 1081013634}
   - {fileID: 1866608731}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1028155314
 MonoBehaviour:
@@ -1955,6 +2016,9 @@ MonoBehaviour:
   noArrivedNumber: {fileID: 1460176280}
   ratioNumber: {fileID: 470302005}
   firstArrivedIteration: {fileID: 540024868}
+  startButton: {fileID: 617196559}
+  visualSimulationManager: {fileID: 0}
+  dataSimulationManager: {fileID: 0}
 --- !u!1001 &1081013633
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2619,7 +2683,7 @@ RectTransform:
   - {fileID: 334703106}
   - {fileID: 617196558}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}

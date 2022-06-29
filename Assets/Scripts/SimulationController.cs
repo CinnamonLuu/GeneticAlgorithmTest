@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -52,8 +53,10 @@ public class SimulationController : MonoBehaviour
     private GameObject scaneCamera;
     private GameObject eventSystem;
 
-    private enum SimulationType { CompareAlgorithms, IndividualAlgorithms};
-    private SimulationType type;
+    public enum SimulationType { CompareAlgorithms, IndividualAlgorithms};
+    public SimulationType type;
+
+    public Action DataSimulationFinished;
 
     public void Awake()
     {

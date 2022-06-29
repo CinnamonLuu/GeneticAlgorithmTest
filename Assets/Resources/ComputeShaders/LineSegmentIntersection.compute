@@ -148,7 +148,7 @@ int CalculateNumOfObstaclesIntersectedWith(Line lastPosToTarget)
 void CalculateObstacleIntersections(uint3 id : SV_DispatchThreadID)
 {
 		
-	Line line;
+	Line line= Line();
 	line.pointA = _lastAgentPosition[id.x];
 	line.pointB = _targetPoint;
 	

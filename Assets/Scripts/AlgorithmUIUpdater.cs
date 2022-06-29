@@ -16,6 +16,14 @@ public class AlgorithmUIUpdater : MonoBehaviour
     [SerializeField]
     private Text firstArrivedIteration;
 
+    [SerializeField]
+    private Button startButton;
+    [SerializeField]
+    private Button representSimulationButton;
+
+    [SerializeField] private VisualSimulationManager visualSimulationManager;
+    [SerializeField] private DataSimulationManager dataSimulationManager;
+
     public string IterationNumber
     {
         set
@@ -50,5 +58,33 @@ public class AlgorithmUIUpdater : MonoBehaviour
         {
             firstArrivedIteration.text = value;
         }
+    }
+
+    private void Awake()
+    {
+        visualSimulationManager = FindObjectOfType<VisualSimulationManager>();
+        dataSimulationManager = FindObjectOfType<DataSimulationManager>();
+        startButton.onClick.AddListener(StartSimulation);
+        if (SimulationController.Instance)
+        {
+            SimulationController.Instance.DataSimulationFinished += EnableRepresentationButton;
+        }
+    }
+
+    private void StartSimulation()
+    {
+        if (SimulationController.Instance.visualSimulation)
+        {
+            visualSimulationManager.StartSimulation();
+        }
+        else
+        {
+            dataSimulationManager.StartSimulation();
+        }
+        startButton.enabled = false;
+    }
+    private void EnableRepresentationButton()
+    {
+        representSimulationButton.enabled = true;
     }
 }
