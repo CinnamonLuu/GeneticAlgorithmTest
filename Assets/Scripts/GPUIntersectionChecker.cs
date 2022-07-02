@@ -4,7 +4,7 @@ using UnityEngine;
 public class GPUIntersectionChecker
 {
     private int _numAgents;
-    private int _numMovemets;
+    private int _numMovements;
     private int _numObstacles;
     private TypeOfDistance typeOfDistance;
 
@@ -58,7 +58,7 @@ public class GPUIntersectionChecker
     {
 
         _numAgents = numAgents;
-        _numMovemets = numMovements;
+        _numMovements = numMovements;
         _numObstacles = obstacleArray.Length;
         typeOfDistance = type;
 
@@ -75,7 +75,7 @@ public class GPUIntersectionChecker
         _firstCollisionIndex = new int[_numAgents];
         for (int i = 0; i < _firstCollisionIndex.Length; i++)
         {
-            _firstCollisionIndex[i] = _numMovemets - 1;
+            _firstCollisionIndex[i] = _numMovements - 1;
         }
 
         _lastAgentPositions = new Vector2[_numAgents];
@@ -101,8 +101,146 @@ public class GPUIntersectionChecker
 
 
     }
-
     private void CheckIntersectionCPU()
+    {
+        for (int i = 0; i < _numObstacles; i++)
+        {
+            for (int j = 0; j < _numMovements; j++)
+            {
+                for (int k = 0; k < _numAgents; k++)
+                {
+                    LineIntersection(new Vector3(i, j, k));
+                }
+            }
+        }
+
+        for (int i = 0; i < _numObstacles; i++)
+        {
+            CalculateObstacleIntersections(i);
+            switch (SimulationController.Instance.typeOfDistance)
+            {
+                case TypeOfDistance.Manhattan:
+                    _distances[i] = Mathf.Abs(_lastAgentPositions[i].x - _targetPoint.x)
+                        * Mathf.Abs(_lastAgentPositions[i].y - _targetPoint.y);
+                    break;
+                case TypeOfDistance.Euclidean:
+                    _distances[i] = Vector2.Distance(_lastAgentPositions[i], _targetPoint);
+                    break;
+                case TypeOfDistance.Chebyshev:
+                    _distances[i] = Mathf.Max(_lastAgentPositions[i].x - _targetPoint.x,
+                            _lastAgentPositions[i].y - _targetPoint.y);
+
+                    break;
+            }
+
+            _obstacleMultiplier[i] = 1 - (0.1f * _numObstaclesIntersectedWith[i]);
+
+            _fitness[i] = 60 / _distances[i]
+                            * (_agentCrashedBool[i] ? 0.65f : 1f)
+                            * _obstacleMultiplier[i];
+
+            Debug.Log($"Fitness <color=red>{i}</color>: {_fitness[i]} ");
+
+
+        }
+
+
+        void LineIntersection(Vector3 id)
+        {
+
+            int currentAgentMovementIndex = (int)id.z * _numMovements + (int)id.y;
+
+            bool intersects = AreLinesIntersecting(
+                _obstacleBounds[(int)id.x].PointA,
+                _obstacleBounds[(int)id.x].PointB,
+                _agentsPathLines[currentAgentMovementIndex].PointA,
+                _agentsPathLines[currentAgentMovementIndex].PointB);
+
+            _firstCollisionIndex[(int)id.z] = intersects && (_firstCollisionIndex[(int)id.z] > (int)id.z) ? (int)id.z : _firstCollisionIndex[(int)id.z];
+
+            _lastAgentPositions[(int)id.z] = intersects && (_firstCollisionIndex[(int)id.z] > (int)id.z)
+                                            ? CalculateIntersectionPosition(_obstacleBounds[(int)id.x].PointA, _obstacleBounds[(int)id.x].PointB,
+                                                                            _agentsPathLines[currentAgentMovementIndex].PointA, _agentsPathLines[currentAgentMovementIndex].PointB)
+                                            : _lastAgentPositions[(int)id.z];
+            _agentCrashedBool[(int)id.y / _numMovements] = intersects ? true : false;
+        }
+
+        bool AreLinesIntersecting(Vector2 obsA, Vector2 obsB, Vector2 pathA, Vector2 pathB)
+        {
+
+            //To avoid floating point precision issues we can add a small value
+            float epsilon = 0.00001f;
+
+            bool isIntersecting = false;
+
+            float denominator = (obsB.y - obsA.y) * (pathB.x - pathA.x)
+                                - (obsB.x - obsA.x) * (pathB.y - pathA.y);
+
+
+            //Make sure the denominator is > 0, if so the lines are parallel
+            if (denominator != 0)
+            {
+                float u_a = ((obsB.x - obsA.x) * (pathA.y - obsA.y) - (obsB.y - obsA.y) * (pathA.x - obsA.x)) / denominator;
+                float u_b = ((pathB.x - pathA.x) * (pathA.y - obsA.y) - (pathB.y - pathA.y) * (pathA.x - obsA.x)) / denominator;
+
+                //Is intersecting if u_a and u_b are between 0 and 1 or exactly 0 or 1
+                if (u_a >= 0 + epsilon && u_a <= 1 - epsilon && u_b >= 0 + epsilon && u_b <= 1 - epsilon)
+                {
+                    isIntersecting = true;
+
+                }
+            }
+
+            return isIntersecting;
+
+        }
+
+        Vector2 CalculateIntersectionPosition(Vector2 obsA, Vector2 obsB, Vector2 pathA, Vector2 pathB)
+        {
+
+            float denominator = (obsB.y - obsA.y) * (pathB.x - pathA.x)
+                                - (obsB.x - obsA.x) * (pathB.y - pathA.y);
+
+            float u_a = ((obsB.x - obsA.x) * (pathA.y - obsA.y) - (obsB.y - obsA.y) * (pathA.x - obsA.x)) / denominator;
+            float u_b = ((pathB.x - pathA.x) * (pathA.y - obsA.y) - (pathB.y - pathA.y) * (pathA.x - obsA.x)) / denominator;
+
+            return new Vector2(pathA.x + u_a * (pathB.x - pathA.x), pathA.y + u_a * (pathB.y - pathA.y));
+        }
+
+        void CalculateObstacleIntersections(int id)
+{
+
+            Line line = new Line();
+            line.PointA = _lastAgentPositions[id];
+            line.PointB = _targetPoint;
+
+            _numObstaclesIntersectedWith[id] = CalculateNumOfObstaclesIntersectedWith(line);
+        }
+
+        int CalculateNumOfObstaclesIntersectedWith(Line lastPosToTarget)
+        {
+            int numObstaclesIntersected = 0;
+
+            //Each obstacle always have 4 lines
+            for (int i = 0; i < _numObstacles; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    if (AreLinesIntersecting(_obstacleArray[i].obstacleLines[j].pointA,
+                        _obstacleArray[i].obstacleLines[j].pointB,
+                        lastPosToTarget.PointA,
+                        lastPosToTarget.PointB))
+                    {
+                        numObstaclesIntersected++;
+                        break;
+                    }
+                }
+            }
+            return numObstaclesIntersected;
+        }
+    }
+
+    private void oldCheckIntersectionCPU()
     {
         for (int i = 0; i < _agentsPathLines.Length; i++)
         {
@@ -310,10 +448,10 @@ public class GPUIntersectionChecker
     public Vector3[] GetBestSimulation()
     {
         int arrayIndex = GetBestFitnesssIndex();
-        Vector3[] positions = new Vector3[_numMovemets];
-        for (int i = 0; i < _numMovemets; i++)
+        Vector3[] positions = new Vector3[_numMovements];
+        for (int i = 0; i < _numMovements; i++)
         {
-            positions[i] = _agentsPathLines[i + (_numMovemets * arrayIndex)].PointA;
+            positions[i] = _agentsPathLines[i + (_numMovements * arrayIndex)].PointA;
         }
         return positions;
     }

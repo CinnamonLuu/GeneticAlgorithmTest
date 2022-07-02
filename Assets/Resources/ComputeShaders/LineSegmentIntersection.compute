@@ -30,7 +30,7 @@ RWStructuredBuffer<Line> _path;
 RWStructuredBuffer<int> _intersects;
 
 RWStructuredBuffer<int> _firstCollisionIndex;
-RWStructuredBuffer<float2> _lastAgentPosition;
+RWStructuredBuffer<float2> _lastAgentPositions;
 
 
     /*-------------------------OBSTACLES----------------------------- */
@@ -178,21 +178,21 @@ void CalculateFitness(uint3 id : SV_DispatchThreadID)
 [numthreads(8, 1, 1)]
 void CalculateDistanceManhattan(uint3 id : SV_DispatchThreadID)
 {
-	_distances[id.x] = abs(_lastAgentPosition[id.x].x - _targetPoint.x)
-						* abs(_lastAgentPosition[id.x].y - _targetPoint.y);
+	_distances[id.x] = abs(_lastAgentPositions[id.x].x - _targetPoint.x)
+						* abs(_lastAgentPositions[id.x].y - _targetPoint.y);
 }
 
 [numthreads(8, 1, 1)]
 void CalculateDistanceEuclidean(uint3 id : SV_DispatchThreadID)
 {
-	_distances[id.x] = distance(_lastAgentPosition[id.x], _targetPoint);
+	_distances[id.x] = distance(_lastAgentPositions[id.x], _targetPoint);
 }
 
 [numthreads(8, 8, 1)]
 void CalculateDistanceChevyshev(uint3 id : SV_DispatchThreadID)
 {
-	_distances[id.x] = max(_lastAgentPosition[id.x].x - _targetPoint.x,
-							_lastAgentPosition[id.x].y - _targetPoint.y);
+	_distances[id.x] = max(_lastAgentPositions[id.x].x - _targetPoint.x,
+							_lastAgentPositions[id.x].y - _targetPoint.y);
 
 }
 
@@ -204,17 +204,17 @@ void LineIntersection(uint3 id : SV_DispatchThreadID)
 	//else
 	//	_intersects[id.y / numMovements] = 0;
 	
-	int curentAgentMovementIndex = id.z * numMovements + id.y;
+	int currentAgentMovementIndex = id.z * numMovements + id.y;
 	
 	bool intersects = AreLinesIntersecting(_obstacleBounds[id.x].pointA, _obstacleBounds[id.x].pointB,
-							_path[curentAgentMovementIndex].pointA, _path[curentAgentMovementIndex].pointB);
+							_path[currentAgentMovementIndex].pointA, _path[currentAgentMovementIndex].pointB);
 	
 	_firstCollisionIndex[id.z] = intersects && (_firstCollisionIndex[id.z] > id.z) ? id.z : _firstCollisionIndex[id.z];
 	
-	_lastAgentPosition[id.z] = intersects && (_firstCollisionIndex[id.z] > id.z)
+	_lastAgentPositions[id.z] = intersects && (_firstCollisionIndex[id.z] > id.z)
 									? CalculateIntersectionPosition(_obstacleBounds[id.x].pointA, _obstacleBounds[id.x].pointB,
-																	_path[curentAgentMovementIndex].pointA, _path[curentAgentMovementIndex].pointB) 
-									: _lastAgentPosition[id.z];
+																	_path[currentAgentMovementIndex].pointA, _path[currentAgentMovementIndex].pointB) 
+									: _lastAgentPositions[id.z];
 	_intersects[id.y / numMovements] = intersects ? 1 : 0;
 	
 }
