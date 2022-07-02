@@ -97,10 +97,10 @@ public class GPUIntersectionChecker
 
         computeShader = Resources.Load<ComputeShader>("ComputeShaders/LineSegmentIntersection");
         //CheckIntersectionGPU();
-        //CheckIntersectionCPU();
-
+        CheckIntersectionCPU();
 
     }
+
     private void CheckIntersectionCPU()
     {
         for (int i = 0; i < _numObstacles; i++)
@@ -208,7 +208,7 @@ public class GPUIntersectionChecker
         }
 
         void CalculateObstacleIntersections(int id)
-{
+        {
 
             Line line = new Line();
             line.PointA = _lastAgentPositions[id];
@@ -224,16 +224,33 @@ public class GPUIntersectionChecker
             //Each obstacle always have 4 lines
             for (int i = 0; i < _numObstacles; i++)
             {
-                for (int j = 0; j < 4; j++)
+                if (AreLinesIntersecting(_obstacleArray[i].lineA.PointA,
+                                            _obstacleArray[i].lineA.PointB,
+                                            lastPosToTarget.PointA,
+                                            lastPosToTarget.PointB))
                 {
-                    if (AreLinesIntersecting(_obstacleArray[i].obstacleLines[j].pointA,
-                        _obstacleArray[i].obstacleLines[j].pointB,
-                        lastPosToTarget.PointA,
-                        lastPosToTarget.PointB))
-                    {
-                        numObstaclesIntersected++;
-                        break;
-                    }
+                    numObstaclesIntersected++;
+                }
+                else if (AreLinesIntersecting(_obstacleArray[i].lineB.PointA,
+                                                _obstacleArray[i].lineB.PointB,
+                                                lastPosToTarget.PointA,
+                                                lastPosToTarget.PointB))
+                {
+                    numObstaclesIntersected++;
+                }
+                else if (AreLinesIntersecting(_obstacleArray[i].lineC.PointA,
+                                                _obstacleArray[i].lineC.PointB,
+                                                lastPosToTarget.PointA,
+                                                lastPosToTarget.PointB))
+                {
+                    numObstaclesIntersected++;
+                }
+                else if (AreLinesIntersecting(_obstacleArray[i].lineD.PointA,
+                                                _obstacleArray[i].lineD.PointB,
+                                                lastPosToTarget.PointA,
+                                                lastPosToTarget.PointB))
+                {
+                    numObstaclesIntersected++;
                 }
             }
             return numObstaclesIntersected;
