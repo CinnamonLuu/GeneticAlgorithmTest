@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
+[System.Serializable]
 public class GPUIntersectionChecker
 {
     private int _numAgents;
@@ -9,27 +11,28 @@ public class GPUIntersectionChecker
     private TypeOfDistance typeOfDistance;
 
     /*-------------------------INTERSECTION----------------------------- */
-    private Line[] _obstacleBounds;
-    private Line[] _agentsPathLines;
-    private int[] _agentCrashed;
-    private bool[] _agentCrashedBool;
+    [SerializeField]private Line[] _obstacleBounds;
+    [SerializeField]private Line[] _agentsPathLines;
+    [SerializeField]private int[] _agentCrashed;
+    [SerializeField]private bool[] _agentCrashedBool;
 
-    private int[] _firstCollisionIndex;
-    private Vector2[] _lastAgentPositions;
+    [SerializeField]private int[] _firstCollisionIndex;
+    [SerializeField]private Vector2[] _lastAgentPositions;
     /*-------------------------OBSTACLES----------------------------- */
-    private Obstacle[] _obstacleArray;
-    private int[] _numObstaclesIntersectedWith;
+    [SerializeField]private Obstacle[] _obstacleArray;
+    [SerializeField]private int[] _numObstaclesIntersectedWith;
 
 
     /*-------------------------FITNESS----------------------------- */
-    private float[] _obstacleMultiplier;
-    private float[] _fitness;
+    [SerializeField]private float[] _obstacleMultiplier;
+    [SerializeField]private float[] _fitness;
 
 
     /*-------------------------DISTANCES----------------------------- */
+    private Vector2 _spawnPoint;
     private Vector2 _targetPoint;
 
-    private float[] _distances;
+    [SerializeField] private float[] _distances;
 
 
     public Line[] AgentsPathLines { get => _agentsPathLines; set => _agentsPathLines = value; }
@@ -77,8 +80,12 @@ public class GPUIntersectionChecker
         {
             _firstCollisionIndex[i] = _numMovements - 1;
         }
-
+        _spawnPoint = spawnPoint;
         _lastAgentPositions = new Vector2[_numAgents];
+        for (int i = 0; i < _lastAgentPositions.Length; i++)
+        {
+            _lastAgentPositions[i] = _agentsPathLines[((i + 1) * _numMovements) - 1 ].PointB;
+        }
         #endregion
         #region Initialize obstacle variables
         _obstacleArray = obstacleArray;
@@ -111,6 +118,10 @@ public class GPUIntersectionChecker
         }
 
         _lastAgentPositions = new Vector2[_numAgents];
+        for (int i = 0; i < _lastAgentPositions.Length; i++)
+        {
+            _lastAgentPositions[i] = _agentsPathLines[((i + 1) * _numMovements) - 1].PointB;
+        }
 
         _numObstaclesIntersectedWith = new int[_numAgents];
 
@@ -119,12 +130,13 @@ public class GPUIntersectionChecker
 
         _distances = new float[_numAgents];
         _agentCrashedBool = new bool[_numAgents];
+        _agentCrashed = new int[_numAgents];
 
     }
 
     public void CheckIntersectionCPU()
     {
-        for (int i = 0; i < _numObstacles; i++)
+        for (int i = 0; i < _obstacleBounds.Length; i++)
         {
             for (int j = 0; j < _numMovements; j++)
             {
@@ -175,13 +187,17 @@ public class GPUIntersectionChecker
                 _agentsPathLines[currentAgentMovementIndex].PointA,
                 _agentsPathLines[currentAgentMovementIndex].PointB);
 
-            _firstCollisionIndex[(int)id.z] = intersects && (_firstCollisionIndex[(int)id.z] > (int)id.y) ? (int)id.y : _firstCollisionIndex[(int)id.z];
+            _agentCrashedBool[(int)id.z] |= intersects;
+            _agentCrashed[(int)id.z] = _agentCrashedBool[(int)id.z] ? 1 : 0;
 
-            _lastAgentPositions[(int)id.z] = intersects && (_firstCollisionIndex[(int)id.z] > (int)id.y)
+            bool improves = (_firstCollisionIndex[(int)id.z] > (int)id.y);
+
+            _firstCollisionIndex[(int)id.z] = intersects && improves ? (int)id.y : _firstCollisionIndex[(int)id.z];
+
+            _lastAgentPositions[(int)id.z] = intersects && improves
                                             ? CalculateIntersectionPosition(_obstacleBounds[(int)id.x].PointA, _obstacleBounds[(int)id.x].PointB,
                                                                             _agentsPathLines[currentAgentMovementIndex].PointA, _agentsPathLines[currentAgentMovementIndex].PointB)
                                             : _lastAgentPositions[(int)id.z];
-            _agentCrashedBool[(int)id.z] = intersects ? true : false;
         }
 
         bool AreLinesIntersecting(Vector2 obsA, Vector2 obsB, Vector2 pathA, Vector2 pathB)
@@ -192,18 +208,18 @@ public class GPUIntersectionChecker
 
             bool isIntersecting = false;
 
-            float denominator = (obsB.y - obsA.y) * (pathB.x - pathA.x)
-                                - (obsB.x - obsA.x) * (pathB.y - pathA.y);
+            float denominator = (pathB.y - pathA.y) * (obsB.x - obsA.x) 
+                                - (pathB.x - pathA.x) * (obsB.y - obsA.y) ;
 
 
             //Make sure the denominator is > 0, if so the lines are parallel
             if (denominator != 0)
             {
-                float u_a = ((obsB.x - obsA.x) * (pathA.y - obsA.y) - (obsB.y - obsA.y) * (pathA.x - obsA.x)) / denominator;
-                float u_b = ((pathB.x - pathA.x) * (pathA.y - obsA.y) - (pathB.y - pathA.y) * (pathA.x - obsA.x)) / denominator;
+                float u_a = ((pathB.x - pathA.x) * (obsA.y - pathA.y) - (pathB.y - pathA.y) * (obsA.x - pathA.x)) / denominator;
+                float u_b = ((obsB.x - obsA.x) * (obsA.y - pathA.y) - (obsB.y - obsA.y) * (obsA.x - pathA.x)) / denominator;
 
                 //Is intersecting if u_a and u_b are between 0 and 1 or exactly 0 or 1
-                if (u_a >= 0 + epsilon && u_a <= 1 - epsilon && u_b >= 0 + epsilon && u_b <= 1 - epsilon)
+                if (u_a >= 0f + epsilon && u_a <= 1f - epsilon && u_b >= 0f + epsilon && u_b <= 1f - epsilon)
                 {
                     isIntersecting = true;
 
@@ -217,13 +233,14 @@ public class GPUIntersectionChecker
         Vector2 CalculateIntersectionPosition(Vector2 obsA, Vector2 obsB, Vector2 pathA, Vector2 pathB)
         {
 
-            float denominator = (obsB.y - obsA.y) * (pathB.x - pathA.x)
-                                - (obsB.x - obsA.x) * (pathB.y - pathA.y);
+            float denominator = (pathB.y - pathA.y) * (obsB.x - obsA.x)
+                                - (pathB.x - pathA.x) * (obsB.y - obsA.y);
 
-            float u_a = ((obsB.x - obsA.x) * (pathA.y - obsA.y) - (obsB.y - obsA.y) * (pathA.x - obsA.x)) / denominator;
-            float u_b = ((pathB.x - pathA.x) * (pathA.y - obsA.y) - (pathB.y - pathA.y) * (pathA.x - obsA.x)) / denominator;
+            float u_a = ((pathB.x - pathA.x) * (obsA.y - pathA.y) - (pathB.y - pathA.y) * (obsA.x - pathA.x)) / denominator;
+            float u_b = ((obsB.x - obsA.x) * (obsA.y - pathA.y) - (obsB.y - obsA.y) * (obsA.x - pathA.x)) / denominator;
 
-            return new Vector2(pathA.x + u_a * (pathB.x - pathA.x), pathA.y + u_a * (pathB.y - pathA.y));
+            return new Vector2(obsA.x + u_a * (obsB.x - obsA.x),
+                                obsA.y + u_a * (obsB.y - obsA.y));
         }
 
         void CalculateObstacleIntersections(int id)
@@ -450,7 +467,6 @@ public class GPUIntersectionChecker
 
         /*--------------------------------------------------------------- */
 
-        bufferAgentsCrashed.GetData(_agentCrashed);
         bufferAgentsCrashed.GetData(_agentCrashed);
         bufferFirstCollinsionIndex.GetData(_firstCollisionIndex);
         bufferLastAgentPositions.GetData(_lastAgentPositions);

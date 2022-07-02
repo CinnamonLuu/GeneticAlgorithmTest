@@ -87,45 +87,43 @@ bool AreLineSegmentsIntersectingDotProduct(Line obstacleLine, Line pathLine)
 }
 
 bool AreLinesIntersecting(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
-{
-	
+{	
 	//To avoid floating point precision issues we can add a small value
 	float epsilon = 0.00001;
-	
+
 	bool isIntersecting = false;
-	
-	float denominator = (obsB.y - obsA.y) * (pathB.x - pathA.x)
-						- (obsB.x - obsA.x) * (pathB.y - pathA.y);
-	
-	
-	//Make sure the denominator is > 0, if so the lines are parallel
+
+	float denominator = (pathB.y - pathA.y) * (obsB.x - obsA.x)
+                                - (pathB.x - pathA.x) * (obsB.y - obsA.y);
+
+
+            //Make sure the denominator is > 0, if so the lines are parallel
 	if (denominator != 0)
 	{
-		float u_a = ((obsB.x - obsA.x) * (pathA.y - obsA.y) - (obsB.y - obsA.y) * (pathA.x - obsA.x)) / denominator;
-		float u_b = ((pathB.x - pathA.x) * (pathA.y - obsA.y) - (pathB.y - pathA.y) * (pathA.x - obsA.x)) / denominator;
+		float u_a = ((pathB.x - pathA.x) * (obsA.y - pathA.y) - (pathB.y - pathA.y) * (obsA.x - pathA.x)) / denominator;
+		float u_b = ((obsB.x - obsA.x) * (obsA.y - pathA.y) - (obsB.y - obsA.y) * (obsA.x - pathA.x)) / denominator;
 
-		//Is intersecting if u_a and u_b are between 0 and 1 or exactly 0 or 1
+                //Is intersecting if u_a and u_b are between 0 and 1 or exactly 0 or 1
 		if (u_a >= 0 + epsilon && u_a <= 1 - epsilon && u_b >= 0 + epsilon && u_b <= 1 - epsilon)
 		{
 			isIntersecting = true;
-			
+
 		}
 	}
 
 	return isIntersecting;
-	
 }
 
 float2 CalculateIntersectionPosition(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
 {
+	float denominator = (pathB.y - pathA.y) * (obsB.x - obsA.x)
+                                - (pathB.x - pathA.x) * (obsB.y - obsA.y);
 
-	float denominator = (obsB.y - obsA.y) * (pathB.x - pathA.x)
-						- (obsB.x - obsA.x) * (pathB.y - pathA.y);
-	
-	float u_a = ((obsB.x - obsA.x) * (pathA.y - obsA.y) - (obsB.y - obsA.y) * (pathA.x - obsA.x)) / denominator;
-	float u_b = ((pathB.x - pathA.x) * (pathA.y - obsA.y) - (pathB.y - pathA.y) * (pathA.x - obsA.x)) / denominator;
-	
-	return float2(pathA.x + u_a * (pathB.x - pathA.x), pathA.y + u_a * (pathB.y - pathA.y));
+	float u_a = ((pathB.x - pathA.x) * (obsA.y - pathA.y) - (pathB.y - pathA.y) * (obsA.x - pathA.x)) / denominator;
+	float u_b = ((obsB.x - obsA.x) * (obsA.y - pathA.y) - (obsB.y - obsA.y) * (obsA.x - pathA.x)) / denominator;
+
+	return float2(obsA.x + u_a * (obsB.x - obsA.x),
+					obsA.y + u_a * (obsB.y - obsA.y));
 }
 
 int CalculateNumOfObstaclesIntersectedWith(Line lastPosToTarget)
@@ -199,23 +197,22 @@ void CalculateDistanceChevyshev(uint3 id : SV_DispatchThreadID)
 [numthreads(8, 8, 8)]
 void LineIntersection(uint3 id : SV_DispatchThreadID)
 {
-	//if (AreLineSegmentsIntersectingDotProduct(_obstacleBounds[id.x], _path[id.y]))
-	//	_intersects[id.y / numMovements] = 1;
-	//else
-	//	_intersects[id.y / numMovements] = 0;
-	
 	int currentAgentMovementIndex = id.z * numMovements + id.y;
 	
 	bool intersects = AreLinesIntersecting(_obstacleBounds[id.x].pointA, _obstacleBounds[id.x].pointB,
 							_path[currentAgentMovementIndex].pointA, _path[currentAgentMovementIndex].pointB);
 	
-	_firstCollisionIndex[id.z] = intersects && (_firstCollisionIndex[id.z] > id.z) ? id.z : _firstCollisionIndex[id.z];
+	bool hasIntersected = _intersects[id.z] == 1 ? true : false;
+	_intersects[id.z] = intersects || hasIntersected ? 1 : 0;
 	
-	_lastAgentPositions[id.z] = intersects && (_firstCollisionIndex[id.z] > id.z)
+	bool improves = (_firstCollisionIndex[id.z] > id.y);
+	
+	_firstCollisionIndex[id.z] = intersects && improves ? id.y : _firstCollisionIndex[id.z];
+	
+	_lastAgentPositions[id.z] = intersects && improves
 									? CalculateIntersectionPosition(_obstacleBounds[id.x].pointA, _obstacleBounds[id.x].pointB,
 																	_path[currentAgentMovementIndex].pointA, _path[currentAgentMovementIndex].pointB) 
 									: _lastAgentPositions[id.z];
-	_intersects[id.y / numMovements] = intersects ? 1 : 0;
 	
 }
 
