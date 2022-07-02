@@ -1674,8 +1674,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   visualSimulation: 0
-  NumAgents: 10
+  NumAgents: 2
   NumMovements: 20
+  GenerateRandomData: 1
   typeOfDistance: 0
   map: 0
   compareAlgorithmsIndexes: 01000000020000000300000004000000
@@ -1686,6 +1687,7 @@ MonoBehaviour:
   typeOfDistancePanel: {fileID: 1471592391}
   mapsPanel: {fileID: 467808456}
   tmpLines: []
+  type: 0
 --- !u!4 &705741581
 Transform:
   m_ObjectHideFlags: 0

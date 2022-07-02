@@ -42,7 +42,7 @@ public class GPUIntersectionChecker
         _agentPathArrayID = Shader.PropertyToID("_path"),
         _agentCrashedArrayID = Shader.PropertyToID("_intersects"),
         _firstCollisionIndexID = Shader.PropertyToID("_firstCollisionIndex"),
-        _lastAgentPositionsID = Shader.PropertyToID("_lastAgentPosition"),
+        _lastAgentPositionsID = Shader.PropertyToID("_lastAgentPositions"),
 
         _obstaclesID = Shader.PropertyToID("_obstacles"),
         _numObstaclesIntersectedWithID = Shader.PropertyToID("_numObstaclesIntersectedWith"),
@@ -95,9 +95,31 @@ public class GPUIntersectionChecker
         _distances = new float[_numAgents];
         #endregion
 
+        _agentCrashedBool = new bool[numAgents];
+
         computeShader = Resources.Load<ComputeShader>("ComputeShaders/LineSegmentIntersection");
         //CheckIntersectionGPU();
         //CheckIntersectionCPU();
+    }
+
+    public void ResetVariables()
+    {
+        _firstCollisionIndex = new int[_numAgents];
+        for (int i = 0; i < _firstCollisionIndex.Length; i++)
+        {
+            _firstCollisionIndex[i] = _numMovements - 1;
+        }
+
+        _lastAgentPositions = new Vector2[_numAgents];
+
+        _numObstaclesIntersectedWith = new int[_numAgents];
+
+        _obstacleMultiplier = new float[_numAgents];
+        _fitness = new float[_numAgents];
+
+        _distances = new float[_numAgents];
+        _agentCrashedBool = new bool[_numAgents];
+
     }
 
     public void CheckIntersectionCPU()
@@ -113,7 +135,7 @@ public class GPUIntersectionChecker
             }
         }
 
-        for (int i = 0; i < _numObstacles; i++)
+        for (int i = 0; i < _numAgents; i++)
         {
             CalculateObstacleIntersections(i);
             switch (SimulationController.Instance.typeOfDistance)
@@ -138,9 +160,7 @@ public class GPUIntersectionChecker
                             * (_agentCrashedBool[i] ? 0.65f : 1f)
                             * _obstacleMultiplier[i];
 
-            Debug.Log($"Fitness <color=red>{i}</color>: {_fitness[i]} ");
-
-
+            Debug.Log($"CPU: Fitness <color=red>{i}</color>: {_fitness[i]} ");
         }
 
 
@@ -155,13 +175,13 @@ public class GPUIntersectionChecker
                 _agentsPathLines[currentAgentMovementIndex].PointA,
                 _agentsPathLines[currentAgentMovementIndex].PointB);
 
-            _firstCollisionIndex[(int)id.z] = intersects && (_firstCollisionIndex[(int)id.z] > (int)id.z) ? (int)id.z : _firstCollisionIndex[(int)id.z];
+            _firstCollisionIndex[(int)id.z] = intersects && (_firstCollisionIndex[(int)id.z] > (int)id.y) ? (int)id.y : _firstCollisionIndex[(int)id.z];
 
-            _lastAgentPositions[(int)id.z] = intersects && (_firstCollisionIndex[(int)id.z] > (int)id.z)
+            _lastAgentPositions[(int)id.z] = intersects && (_firstCollisionIndex[(int)id.z] > (int)id.y)
                                             ? CalculateIntersectionPosition(_obstacleBounds[(int)id.x].PointA, _obstacleBounds[(int)id.x].PointB,
                                                                             _agentsPathLines[currentAgentMovementIndex].PointA, _agentsPathLines[currentAgentMovementIndex].PointB)
                                             : _lastAgentPositions[(int)id.z];
-            _agentCrashedBool[(int)id.y / _numMovements] = intersects ? true : false;
+            _agentCrashedBool[(int)id.z] = intersects ? true : false;
         }
 
         bool AreLinesIntersecting(Vector2 obsA, Vector2 obsB, Vector2 pathA, Vector2 pathB)
@@ -351,8 +371,8 @@ public class GPUIntersectionChecker
 
 
         computeShader.Dispatch(lineIntersectionShaderIndex, Mathf.CeilToInt(_obstacleBounds.Length / 8.0f),
-                                           Mathf.CeilToInt(SimulationController.Instance.NumMovements / 8.0f),
-                                           Mathf.CeilToInt(SimulationController.Instance.NumAgents / 8.0f));
+                                           Mathf.CeilToInt(_numMovements / 8.0f),
+                                           Mathf.CeilToInt(_numAgents / 8.0f));
 
         bufferLastAgentPositions.GetData(_lastAgentPositions);
 
@@ -452,7 +472,7 @@ public class GPUIntersectionChecker
 
         for (int i = 0; i < _numAgents; i++)
         {
-            Debug.Log($"{i}: {_fitness[i]}");
+            Debug.Log($"GPU: Fitness <color=green>{i}</color>: {_fitness[i]} ");
         }
         if (SimulationController.Instance)
         {

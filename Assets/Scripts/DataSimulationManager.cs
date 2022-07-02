@@ -32,7 +32,10 @@ public class DataSimulationManager : MonoBehaviour
 
     public void StartSimulation()
     {
+        intersectionChecker.CheckIntersectionCPU();
+        intersectionChecker.ResetVariables();
         intersectionChecker.CheckIntersectionGPU();
+
     }
 
     public void RepresentBestSimulation()
