@@ -97,11 +97,10 @@ public class GPUIntersectionChecker
 
         computeShader = Resources.Load<ComputeShader>("ComputeShaders/LineSegmentIntersection");
         //CheckIntersectionGPU();
-        CheckIntersectionCPU();
-
+        //CheckIntersectionCPU();
     }
 
-    private void CheckIntersectionCPU()
+    public void CheckIntersectionCPU()
     {
         for (int i = 0; i < _numObstacles; i++)
         {
