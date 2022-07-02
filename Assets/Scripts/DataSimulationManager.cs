@@ -37,8 +37,8 @@ public class DataSimulationManager : MonoBehaviour
 
     public void RepresentBestSimulation()
     {
-        PopulationController populationController = FindObjectOfType<PopulationController>();
+        //PopulationController populationController = FindObjectOfType<PopulationController>();
+        lineRenderer.positionCount = SimulationController.Instance.NumMovements;
         lineRenderer.SetPositions(intersectionChecker.GetBestSimulation());
-
     }
 }

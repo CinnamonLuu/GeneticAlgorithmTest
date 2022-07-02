@@ -26,24 +26,21 @@ public class MapSerializer : MonoBehaviour
         {
             sprite = item.GetComponent<BoxCollider2D>();
             rectVertices = GetBoxPoints2D(sprite);
-
-            Obstacle obstacle = new Obstacle();
-            obstacle.ObstacleLines = new Line[4];
+            Line[] lines = new Line[4];
             for (int i = 0; i < 4; i++)
             {
-                Line line;
                 if (i == 3)
                 {
-                    line = new Line(rectVertices[i], rectVertices[0]);
+                    lines[i] = new Line(rectVertices[i], rectVertices[0]);
                 }
                 else
                 {
-                    line = new Line(rectVertices[i], rectVertices[i + 1]);
+                    lines[i] = new Line(rectVertices[i], rectVertices[i + 1]);
                 }
-                ObastacleMapLines.Add(line);
-                obstacle.ObstacleLines[i] = line;
+                ObastacleMapLines.Add(lines[i]);
                 points.Add(rectVertices[i]);
             }
+            Obstacle obstacle = new Obstacle(lines);
             Obstacles.Add(obstacle);
         }
         spawnPosition = GameObject.FindGameObjectWithTag("Spawn").transform;
@@ -95,10 +92,16 @@ public struct Line
 
 public struct Obstacle
 {
-    public Line[] ObstacleLines;
+    public Line lineA;
+    public Line lineB;
+    public Line lineC;
+    public Line lineD;
 
     public Obstacle(Line[] obstacleLines)
     {
-        this.ObstacleLines = obstacleLines;
+        this.lineA = obstacleLines[0];
+        this.lineB = obstacleLines[1];
+        this.lineC = obstacleLines[2];
+        this.lineD = obstacleLines[3];
     }
 }

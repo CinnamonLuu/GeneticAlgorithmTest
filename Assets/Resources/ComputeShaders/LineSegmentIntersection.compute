@@ -15,7 +15,10 @@ struct Line
 
 struct Obstacle
 {
-	RWStructuredBuffer<Line> obstacleLines;
+	Line lineA;
+	Line lineB;
+	Line lineC;
+	Line lineD;
 };
 
     /*-------------------------INTERSECTION----------------------------- */
@@ -132,27 +135,34 @@ int CalculateNumOfObstaclesIntersectedWith(Line lastPosToTarget)
 	//Each obstacle always have 4 lines
 	for (int i = 0; i < numObstacles; i++)
 	{
-		for (int j = 0; j < 4; j++)
+		if (AreLinesIntersecting(_obstacles[i].lineA.pointA, _obstacles[i].lineA.pointB, lastPosToTarget.pointA, lastPosToTarget.pointB))
 		{
-			if (AreLinesIntersecting(_obstacles[i].obstacleLines[j].pointA, _obstacles[i].obstacleLines[j].pointB, lastPosToTarget.pointA, lastPosToTarget.pointB))
-			{
-				numObstaclesIntersected++;
-				break;
-			}
+			numObstaclesIntersected++;
+		}
+		else if (AreLinesIntersecting(_obstacles[i].lineB.pointA, _obstacles[i].lineB.pointB, lastPosToTarget.pointA, lastPosToTarget.pointB))
+		{
+			numObstaclesIntersected++;
+		}
+		else if (AreLinesIntersecting(_obstacles[i].lineC.pointA, _obstacles[i].lineC.pointB, lastPosToTarget.pointA, lastPosToTarget.pointB))
+		{
+			numObstaclesIntersected++;
+		}
+		else if (AreLinesIntersecting(_obstacles[i].lineD.pointA, _obstacles[i].lineD.pointB, lastPosToTarget.pointA, lastPosToTarget.pointB))
+		{
+			numObstaclesIntersected++;
 		}
 	}
 	return numObstaclesIntersected;
 }
 
-[numthread(8, 1, 1)]
+[numthreads(8, 1, 1)]
 void CalculateObstacleIntersections(uint3 id : SV_DispatchThreadID)
 {
-		
-	Line line= Line();
-	line.pointA = _lastAgentPosition[id.x];
-	line.pointB = _targetPoint;
+	Line segment;
+	segment.pointA = _lastAgentPosition[id.x];
+	segment.pointB = _targetPoint;
 	
-	_numObstaclesIntersectedWith[id.x] = CalculateNumOfObstaclesIntersectedWith(line);
+	_numObstaclesIntersectedWith[id.x] = CalculateNumOfObstaclesIntersectedWith(segment);
 }
 
 [numthreads(8, 1, 1)]

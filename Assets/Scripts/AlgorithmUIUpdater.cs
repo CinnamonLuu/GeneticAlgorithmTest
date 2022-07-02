@@ -81,10 +81,10 @@ public class AlgorithmUIUpdater : MonoBehaviour
         {
             dataSimulationManager.StartSimulation();
         }
-        startButton.enabled = false;
+        startButton.gameObject.SetActive(false);
     }
     private void EnableRepresentationButton()
     {
-        representSimulationButton.enabled = true;
+        representSimulationButton.gameObject.SetActive(true);
     }
 }

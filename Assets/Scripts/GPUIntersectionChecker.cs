@@ -157,7 +157,7 @@ public class GPUIntersectionChecker
     public void CheckIntersectionGPU()
     {
         int lineIntersectionShaderIndex = computeShader.FindKernel("LineIntersection");
-        int calculateObstacleIntersections = computeShader.FindKernel("CalculateObstacleIntersections");
+        int calculateObstacleIntersectionsIndex = computeShader.FindKernel("CalculateObstacleIntersections");
         int calculateDistEuclideanShaderIndex = computeShader.FindKernel("CalculateDistanceManhattan");
         int calculateDistManhattanShaderIndex = computeShader.FindKernel("CalculateDistanceEuclidean");
         int calculateDistChevyshevShaderIndex = computeShader.FindKernel("CalculateDistanceChevyshev");
@@ -196,23 +196,27 @@ public class GPUIntersectionChecker
         computeShader.SetBuffer(lineIntersectionShaderIndex, _lastAgentPositionsID, bufferLastAgentPositions);
 
 
-        computeShader.Dispatch(lineIntersectionShaderIndex, Mathf.CeilToInt(_obstacleBounds.Length / 8),
-                                           Mathf.CeilToInt(SimulationController.Instance.NumMovements / 8),
-                                           Mathf.CeilToInt(SimulationController.Instance.NumAgents / 8));
+        computeShader.Dispatch(lineIntersectionShaderIndex, Mathf.CeilToInt(_obstacleBounds.Length / 8.0f),
+                                           Mathf.CeilToInt(SimulationController.Instance.NumMovements / 8.0f),
+                                           Mathf.CeilToInt(SimulationController.Instance.NumAgents / 8.0f));
+
+        bufferLastAgentPositions.GetData(_lastAgentPositions);
 
         /*-------------------------OBSTACLES----------------------------- */
         ComputeBuffer bufferObstacles = new ComputeBuffer(_obstacleBounds.Length, obstacleSize);
         bufferObstacles.SetData(_obstacleArray);
-        computeShader.SetBuffer(calculateObstacleIntersections, _obstaclesID, bufferObstacles);
+        computeShader.SetBuffer(calculateObstacleIntersectionsIndex, _obstaclesID, bufferObstacles);
 
         ComputeBuffer bufferNumObstaclesIntersectedWith = new ComputeBuffer(_numAgents, sizeof(int));
         bufferNumObstaclesIntersectedWith.SetData(_numObstaclesIntersectedWith);
-        computeShader.SetBuffer(calculateObstacleIntersections, _numObstaclesIntersectedWithID, bufferNumObstaclesIntersectedWith);
+        computeShader.SetBuffer(calculateObstacleIntersectionsIndex, _numObstaclesIntersectedWithID, bufferNumObstaclesIntersectedWith);
 
+        bufferLastAgentPositions.SetData(_lastAgentPositions);
+        computeShader.SetBuffer(calculateObstacleIntersectionsIndex, _lastAgentPositionsID, bufferLastAgentPositions);
 
         computeShader.SetFloats("_targetPoint", new float[] { _targetPoint.x, _targetPoint.y });
 
-        computeShader.Dispatch(calculateObstacleIntersections, Mathf.CeilToInt(_numAgents / 8), 1, 1);
+        computeShader.Dispatch(calculateObstacleIntersectionsIndex, Mathf.CeilToInt(_numAgents / 8.0f), 1, 1);
 
 
         /*-------------------------DISTANCES----------------------------- */
@@ -225,7 +229,7 @@ public class GPUIntersectionChecker
                 computeShader.SetBuffer(calculateDistManhattanShaderIndex, _lastAgentPositionsID, bufferLastAgentPositions);
 
                 computeShader.Dispatch(calculateDistManhattanShaderIndex,
-                         Mathf.CeilToInt(_obstacleBounds.Length / 8),
+                         Mathf.CeilToInt(_obstacleBounds.Length / 8.0f),
                          1,
                          1);
                 break;
@@ -234,7 +238,7 @@ public class GPUIntersectionChecker
                 computeShader.SetBuffer(calculateDistEuclideanShaderIndex, _lastAgentPositionsID, bufferLastAgentPositions);
 
                 computeShader.Dispatch(calculateDistEuclideanShaderIndex,
-                         Mathf.CeilToInt(_obstacleBounds.Length / 8),
+                         Mathf.CeilToInt(_obstacleBounds.Length / 8.0f),
                          1,
                          1);
                 break;
@@ -243,7 +247,7 @@ public class GPUIntersectionChecker
                 computeShader.SetBuffer(calculateDistChevyshevShaderIndex, _lastAgentPositionsID, bufferLastAgentPositions);
 
                 computeShader.Dispatch(calculateDistChevyshevShaderIndex,
-                         Mathf.CeilToInt(_obstacleBounds.Length / 8),
+                         Mathf.CeilToInt(_obstacleBounds.Length / 8.0f),
                          1,
                          1);
                 break;
@@ -266,7 +270,7 @@ public class GPUIntersectionChecker
         computeShader.SetBuffer(calculatFitnessShaderIndex, _agentCrashedArrayID, bufferAgentsCrashed);
 
         computeShader.Dispatch(calculatFitnessShaderIndex,
-                                 Mathf.CeilToInt(_obstacleBounds.Length / 8),
+                                 Mathf.CeilToInt(_obstacleBounds.Length / 8.0f),
                                  1,
                                  1);
 
