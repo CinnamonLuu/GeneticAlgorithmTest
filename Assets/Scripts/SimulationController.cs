@@ -163,7 +163,7 @@ public class SimulationController : MonoBehaviour
         }
         if (type == SimulationType.IndividualAlgorithms)
         {
-            SceneManager.LoadScene(mapScenesIndexes[sceneIndex], LoadSceneMode.Additive);
+            SceneManager.LoadScene(sceneIndex, LoadSceneMode.Additive);
         }
     }
 

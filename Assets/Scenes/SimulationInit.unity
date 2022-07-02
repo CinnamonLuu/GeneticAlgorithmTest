@@ -1674,8 +1674,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   visualSimulation: 0
-  NumAgents: 2
-  NumMovements: 20
+  NumAgents: 10
+  NumMovements: 10
   GenerateRandomData: 1
   typeOfDistance: 0
   map: 0
