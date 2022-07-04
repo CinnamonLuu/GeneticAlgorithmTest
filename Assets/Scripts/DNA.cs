@@ -6,6 +6,10 @@ public class DNA
 {
     public List<Vector2> genes = new List<Vector2>();
 
+    public DNA()
+    {
+
+    }
     public DNA(float stepPathMultiplier, int genomeLenght = 50)
     {
         for (int i = 0; i < genomeLenght; i++)
