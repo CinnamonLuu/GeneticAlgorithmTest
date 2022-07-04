@@ -10,6 +10,8 @@ public class GPUIntersectionChecker
     private int _numObstacles;
     private TypeOfDistance typeOfDistance;
 
+    [SerializeField] private Vector2[] u;
+
     /*-------------------------INTERSECTION----------------------------- */
     [SerializeField]private Line[] _obstacleBounds;
     [SerializeField]private Line[] _agentsPathLines;
@@ -53,7 +55,11 @@ public class GPUIntersectionChecker
         _obstacleMultiplierID = Shader.PropertyToID("_obstacleMultiplier"),
         _fitnessID = Shader.PropertyToID("_fitness"),
 
+        uID = Shader.PropertyToID("u"),
+
         _distancesID = Shader.PropertyToID("_distances");
+
+
 
     private ComputeShader computeShader;
 
@@ -70,7 +76,7 @@ public class GPUIntersectionChecker
         List<Line> agentsPathLines = new List<Line>();
         for (int i = 0; i < numAgents; i++)
         {
-            agentsPathLines.AddRange(new DNA_DataSimulation(stepPathMultiplier, spawnPoint, SimulationController.Instance.NumMovements).lines);
+            agentsPathLines.AddRange(DNA_DataSimulation.DNA_DataSimulationDebug(stepPathMultiplier, spawnPoint, SimulationController.Instance.NumMovements).lines);
         }
         _agentsPathLines = agentsPathLines.ToArray();
         _agentCrashed = new int[_numAgents];
@@ -104,6 +110,7 @@ public class GPUIntersectionChecker
 
         _agentCrashedBool = new bool[numAgents];
 
+        u = new Vector2[_numMovements * ObstacleBounds.Length];
         computeShader = Resources.Load<ComputeShader>("ComputeShaders/LineSegmentIntersection");
         //CheckIntersectionGPU();
         //CheckIntersectionCPU();
@@ -132,6 +139,7 @@ public class GPUIntersectionChecker
         _agentCrashedBool = new bool[_numAgents];
         _agentCrashed = new int[_numAgents];
 
+        u = new Vector2[_numMovements * ObstacleBounds.Length];
     }
 
     public void CheckIntersectionCPU()
@@ -149,7 +157,7 @@ public class GPUIntersectionChecker
 
         for (int i = 0; i < _numAgents; i++)
         {
-            CalculateObstacleIntersections(i);
+            //CalculateObstacleIntersections(i);
             switch (SimulationController.Instance.typeOfDistance)
             {
                 case TypeOfDistance.Manhattan:
@@ -202,15 +210,24 @@ public class GPUIntersectionChecker
 
         bool AreLinesIntersecting(Vector2 obsA, Vector2 obsB, Vector2 pathA, Vector2 pathB)
         {
-
             //To avoid floating point precision issues we can add a small value
             float epsilon = 0.00001f;
 
             bool isIntersecting = false;
 
-            float denominator = (pathB.y - pathA.y) * (obsB.x - obsA.x) 
-                                - (pathB.x - pathA.x) * (obsB.y - obsA.y) ;
+            float a = (pathB.y - pathA.y),
+            b = (obsB.x - obsA.x),
+            c = (pathB.x - pathA.x),
+            d = (obsB.y - obsA.y);
 
+            float e = a * b,
+            f = c * d,
+            g = e - f;
+            float denominator2 = g;
+
+
+            float denominator = (pathB.y - pathA.y) * (obsB.x - obsA.x) 
+                               - (pathB.x - pathA.x) * (obsB.y - obsA.y) ;
 
             //Make sure the denominator is > 0, if so the lines are parallel
             if (denominator != 0)
@@ -218,16 +235,17 @@ public class GPUIntersectionChecker
                 float u_a = ((pathB.x - pathA.x) * (obsA.y - pathA.y) - (pathB.y - pathA.y) * (obsA.x - pathA.x)) / denominator;
                 float u_b = ((obsB.x - obsA.x) * (obsA.y - pathA.y) - (obsB.y - obsA.y) * (obsA.x - pathA.x)) / denominator;
 
+
+
                 //Is intersecting if u_a and u_b are between 0 and 1 or exactly 0 or 1
                 if (u_a >= 0f + epsilon && u_a <= 1f - epsilon && u_b >= 0f + epsilon && u_b <= 1f - epsilon)
                 {
+                    Debug.Log($"CPU: u_a:{u_a}, u_b:{u_b}, Denominator{denominator}" +
+                        $"Crash in : {obsA},{obsB}x{pathA},{pathB}");
                     isIntersecting = true;
-
                 }
             }
-
             return isIntersecting;
-
         }
 
         Vector2 CalculateIntersectionPosition(Vector2 obsA, Vector2 obsB, Vector2 pathA, Vector2 pathB)
@@ -363,12 +381,12 @@ public class GPUIntersectionChecker
 
         //every Line conforming every Obstacle
         ComputeBuffer bufferObstacleLines = new ComputeBuffer(_obstacleBounds.Length, lineSize);
-        bufferObstacleLines.SetData(ObstacleBounds);
+        bufferObstacleLines.SetData(_obstacleBounds);
         computeShader.SetBuffer(lineIntersectionShaderIndex, _obstacleBoundsArrayID, bufferObstacleLines);
 
         //path of lines of every agent
         ComputeBuffer bufferPathLines = new ComputeBuffer(_agentsPathLines.Length, lineSize);
-        bufferPathLines.SetData(AgentsPathLines);
+        bufferPathLines.SetData(_agentsPathLines);
         computeShader.SetBuffer(lineIntersectionShaderIndex, _agentPathArrayID, bufferPathLines);
 
         //has agent crashed?
@@ -387,11 +405,19 @@ public class GPUIntersectionChecker
         computeShader.SetBuffer(lineIntersectionShaderIndex, _lastAgentPositionsID, bufferLastAgentPositions);
 
 
+        ComputeBuffer bufferU = new ComputeBuffer(_numMovements * ObstacleBounds.Length, vec2Size);
+        bufferU.SetData(u);
+        computeShader.SetBuffer(lineIntersectionShaderIndex, uID, bufferU);
+
+
         computeShader.Dispatch(lineIntersectionShaderIndex, Mathf.CeilToInt(_obstacleBounds.Length / 8.0f),
                                            Mathf.CeilToInt(_numMovements / 8.0f),
                                            Mathf.CeilToInt(_numAgents / 8.0f));
 
+        bufferObstacleLines.GetData(_obstacleBounds);
+        bufferPathLines.GetData(_agentsPathLines);
         bufferLastAgentPositions.GetData(_lastAgentPositions);
+        bufferU.GetData(u);
 
         /*-------------------------OBSTACLES----------------------------- */
         ComputeBuffer bufferObstacles = new ComputeBuffer(_obstacleBounds.Length, obstacleSize);
@@ -485,6 +511,9 @@ public class GPUIntersectionChecker
         bufferObstacleMultiplier.Dispose();
         bufferFitness.Dispose();
         bufferDistances.Dispose();
+
+
+        bufferU.Dispose();
 
         for (int i = 0; i < _numAgents; i++)
         {

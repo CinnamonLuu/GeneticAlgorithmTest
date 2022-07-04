@@ -50,40 +50,38 @@ float2 _targetPoint;
 RWStructuredBuffer<float> _distances;
 
 
-bool IsPointsOnDifferentSides(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
+RWStructuredBuffer<float2> u;
+
+
+float2 calculateU(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
 {
-	bool isOnDifferentSides = false;
-	
-	//The direction of the line
-	float2 lineDir = obsB - obsA;
+	//To avoid floating point precision issues we can add a small value
+	float epsilon = 0.00001;
 
-	//The normal to a line is just flipping x and y and making y negative
-	float2 lineNormal = float2(-lineDir.y, lineDir.x);
-	
-	//Now we need to take the dot product between the normal and the points on the other line
-	float dot1 = dot(lineNormal, pathA - obsA);
-	float dot2 = dot(lineNormal, pathB - obsA);
-
-	//If you multiply them and get a negative value then obsA and obsB are on different sides of the line
-	if (dot1 * dot2 < 0)
-	{
-		isOnDifferentSides = true;
-	}
-
-	return isOnDifferentSides;
-}
-
-bool AreLineSegmentsIntersectingDotProduct(Line obstacleLine, Line pathLine)
-{
 	bool isIntersecting = false;
-
-	if (IsPointsOnDifferentSides(obstacleLine.pointA, obstacleLine.pointB, pathLine.pointA, pathLine.pointB)
-		&& IsPointsOnDifferentSides(pathLine.pointA, pathLine.pointB, obstacleLine.pointA, obstacleLine.pointB))
+	
+	float a = (pathB.y - pathA.y),
+	b = (obsB.x - obsA.x),
+	c = (pathB.x - pathA.x),
+	d = (obsB.y - obsA.y);
+	
+	float e = a * b,
+	f = c * d,
+	g = e-f;
+	float denominator = g;
+	
+	/*float denominator = (pathB.y - pathA.y) * (obsB.x - obsA.x)
+                                - (pathB.x - pathA.x) * (obsB.y - obsA.y);*/
+	float u_a, u_b;
+     //Make sure the denominator is > 0, if so the lines are parallel
+	if (denominator != 0)
 	{
-		isIntersecting = true;
+		u_a = ((pathB.x - pathA.x) * (obsA.y - pathA.y) - (pathB.y - pathA.y) * (obsA.x - pathA.x)) / denominator;
+		u_b = ((obsB.x - obsA.x) * (obsA.y - pathA.y) - (obsB.y - obsA.y) * (obsA.x - pathA.x)) / denominator;
+
 	}
 
-	return isIntersecting;
+	return float2(denominator,u_b);
 }
 
 bool AreLinesIntersecting(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
@@ -94,10 +92,9 @@ bool AreLinesIntersecting(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
 	bool isIntersecting = false;
 
 	float denominator = (pathB.y - pathA.y) * (obsB.x - obsA.x)
-                                - (pathB.x - pathA.x) * (obsB.y - obsA.y);
+                        - (pathB.x - pathA.x) * (obsB.y - obsA.y);
 
-
-            //Make sure the denominator is > 0, if so the lines are parallel
+     //Make sure the denominator is > 0, if so the lines are parallel
 	if (denominator != 0)
 	{
 		float u_a = ((pathB.x - pathA.x) * (obsA.y - pathA.y) - (pathB.y - pathA.y) * (obsA.x - pathA.x)) / denominator;
@@ -107,7 +104,6 @@ bool AreLinesIntersecting(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
 		if (u_a >= 0 + epsilon && u_a <= 1 - epsilon && u_b >= 0 + epsilon && u_b <= 1 - epsilon)
 		{
 			isIntersecting = true;
-
 		}
 	}
 
@@ -199,8 +195,17 @@ void LineIntersection(uint3 id : SV_DispatchThreadID)
 {
 	int currentAgentMovementIndex = id.z * numMovements + id.y;
 	
-	bool intersects = AreLinesIntersecting(_obstacleBounds[id.x].pointA, _obstacleBounds[id.x].pointB,
-							_path[currentAgentMovementIndex].pointA, _path[currentAgentMovementIndex].pointB);
+	uint tempID = id.x * numMovements + id.y;
+	
+	u[tempID] = calculateU(_obstacleBounds[2].pointA,
+							_obstacleBounds[2].pointB,
+							_path[currentAgentMovementIndex].pointA,
+							_path[currentAgentMovementIndex].pointB);
+	
+	bool intersects = AreLinesIntersecting(_obstacleBounds[id.x].pointA,
+											_obstacleBounds[id.x].pointB,
+											_path[currentAgentMovementIndex].pointA,
+											_path[currentAgentMovementIndex].pointB);
 	
 	bool hasIntersected = _intersects[id.z] == 1 ? true : false;
 	_intersects[id.z] = intersects || hasIntersected ? 1 : 0;
