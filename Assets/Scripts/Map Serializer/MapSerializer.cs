@@ -90,6 +90,7 @@ public struct Line
     public float Distance => Vector2.Distance(PointA, PointB);
 }
 
+[Serializable]
 public struct Obstacle
 {
     public Line lineA;
