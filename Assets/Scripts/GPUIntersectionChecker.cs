@@ -44,7 +44,7 @@ public class GPUIntersectionChecker
 
     private static readonly int
         _obstacleBoundsArrayID = Shader.PropertyToID("_obstacleBounds"),
-        _agentPathArrayID = Shader.PropertyToID("_path"),
+        _agentPathLinesID = Shader.PropertyToID("_agentsPathLines"),
         _agentCrashedArrayID = Shader.PropertyToID("_intersects"),
         _firstCollisionIndexID = Shader.PropertyToID("_firstCollisionIndex"),
         _lastAgentPositionsID = Shader.PropertyToID("_lastAgentPositions"),
@@ -110,7 +110,7 @@ public class GPUIntersectionChecker
 
         _agentCrashedBool = new bool[numAgents];
 
-        u = new Vector2[_numMovements * ObstacleBounds.Length];
+        u = new Vector2[130];
         computeShader = Resources.Load<ComputeShader>("ComputeShaders/LineSegmentIntersection");
         //CheckIntersectionGPU();
         //CheckIntersectionCPU();
@@ -139,7 +139,7 @@ public class GPUIntersectionChecker
         _agentCrashedBool = new bool[_numAgents];
         _agentCrashed = new int[_numAgents];
 
-        u = new Vector2[_numMovements * ObstacleBounds.Length];
+        u = new Vector2[130];
     }
 
     public void CheckIntersectionCPU()
@@ -224,6 +224,8 @@ public class GPUIntersectionChecker
             f = c * d,
             g = e - f;
             float denominator2 = g;
+
+            Debug.Log($"CPU: a:{a}, b:{b}");
 
 
             float denominator = (pathB.y - pathA.y) * (obsB.x - obsA.x) 
@@ -377,7 +379,9 @@ public class GPUIntersectionChecker
         int obstacleSize = vec2Size * 4;
 
         /*-------------------------INTERSECTION----------------------------- */
-        computeShader.SetInt("numMovements", SimulationController.Instance.NumMovements);
+        computeShader.SetInt("numObstacleBounds", ObstacleBounds.Length);
+        computeShader.SetInt("numMovements", _numMovements);
+        computeShader.SetInt("numAgents", _numAgents);
 
         //every Line conforming every Obstacle
         ComputeBuffer bufferObstacleLines = new ComputeBuffer(_obstacleBounds.Length, lineSize);
@@ -387,7 +391,12 @@ public class GPUIntersectionChecker
         //path of lines of every agent
         ComputeBuffer bufferPathLines = new ComputeBuffer(_agentsPathLines.Length, lineSize);
         bufferPathLines.SetData(_agentsPathLines);
-        computeShader.SetBuffer(lineIntersectionShaderIndex, _agentPathArrayID, bufferPathLines);
+        computeShader.SetBuffer(lineIntersectionShaderIndex, _agentPathLinesID, bufferPathLines);
+
+        for (int i = 0; i < _agentsPathLines.Length; i++)
+        {
+            _agentsPathLines[i] = new Line();
+        }
 
         //has agent crashed?
         ComputeBuffer bufferAgentsCrashed = new ComputeBuffer(_numAgents, sizeof(int));
@@ -405,14 +414,16 @@ public class GPUIntersectionChecker
         computeShader.SetBuffer(lineIntersectionShaderIndex, _lastAgentPositionsID, bufferLastAgentPositions);
 
 
-        ComputeBuffer bufferU = new ComputeBuffer(_numMovements * ObstacleBounds.Length, vec2Size);
+        ComputeBuffer bufferU = new ComputeBuffer(130, vec2Size);
         bufferU.SetData(u);
         computeShader.SetBuffer(lineIntersectionShaderIndex, uID, bufferU);
+        int a = Mathf.CeilToInt(_obstacleBounds.Length / 4.0f);
+        int b = Mathf.CeilToInt(_numMovements /4.0f);
+        int c = Mathf.CeilToInt(_numAgents / 4.0f);
 
-
-        computeShader.Dispatch(lineIntersectionShaderIndex, Mathf.CeilToInt(_obstacleBounds.Length / 8.0f),
-                                           Mathf.CeilToInt(_numMovements / 8.0f),
-                                           Mathf.CeilToInt(_numAgents / 8.0f));
+        computeShader.Dispatch(lineIntersectionShaderIndex, a,
+                                           b,
+                                           c);
 
         bufferObstacleLines.GetData(_obstacleBounds);
         bufferPathLines.GetData(_agentsPathLines);

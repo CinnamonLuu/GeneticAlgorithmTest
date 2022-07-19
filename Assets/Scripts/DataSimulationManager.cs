@@ -34,6 +34,8 @@ public class DataSimulationManager : MonoBehaviour
     {
 
         intersectionChecker.CheckIntersectionCPU();
+        intersectionChecker.ResetVariables();
+        intersectionChecker.CheckIntersectionGPU();
 
     }
 

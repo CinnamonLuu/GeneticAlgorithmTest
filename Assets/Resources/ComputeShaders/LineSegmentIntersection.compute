@@ -24,9 +24,11 @@ struct Obstacle
     /*-------------------------INTERSECTION----------------------------- */
 
 int numMovements;
+int numAgents;
+int numObstacleBounds;
 
 RWStructuredBuffer<Line> _obstacleBounds;
-RWStructuredBuffer<Line> _path;
+RWStructuredBuffer<Line> _agentsPathLines;
 RWStructuredBuffer<int> _intersects;
 
 RWStructuredBuffer<int> _firstCollisionIndex;
@@ -53,8 +55,13 @@ RWStructuredBuffer<float> _distances;
 RWStructuredBuffer<float2> u;
 
 
-float2 calculateU(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
+float2 calculateU(Line t, Line w)
 {
+	float2 obsA = t.pointA;
+	float2 obsB = t.pointB;
+	float2 pathA = w.pointA;
+	float2 pathB = w.pointB;
+	
 	//To avoid floating point precision issues we can add a small value
 	float epsilon = 0.00001;
 
@@ -81,7 +88,7 @@ float2 calculateU(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
 
 	}
 
-	return float2(denominator,u_b);
+	return float2(c, d);
 }
 
 bool AreLinesIntersecting(float2 obsA, float2 obsB, float2 pathA, float2 pathB)
@@ -190,35 +197,37 @@ void CalculateDistanceChevyshev(uint3 id : SV_DispatchThreadID)
 
 }
 
-[numthreads(8, 8, 8)]
+[numthreads(4, 4, 4)]
 void LineIntersection(uint3 id : SV_DispatchThreadID)
 {
-	int currentAgentMovementIndex = id.z * numMovements + id.y;
+	if (id.x < numObstacleBounds && id.y < numMovements && id.z < numAgents)
+	{
+		int currentAgentMovementIndex = id.z * numMovements + id.y;
 	
-	uint tempID = id.x * numMovements + id.y;
+		int tempID = id.x * numMovements + id.y;
 	
-	u[tempID] = calculateU(_obstacleBounds[2].pointA,
-							_obstacleBounds[2].pointB,
-							_path[currentAgentMovementIndex].pointA,
-							_path[currentAgentMovementIndex].pointB);
+		//u[currentAgentMovementIndex] = calculateU(_obstacleBounds[id.x], _agentsPathLines[currentAgentMovementIndex]);
+		//u[tempID] = float2(currentAgentMovementIndex, _agentsPathLines[0].pointA.y);
+		u[currentAgentMovementIndex] = float2(id.x,numObstacleBounds);
 	
-	bool intersects = AreLinesIntersecting(_obstacleBounds[id.x].pointA,
+	
+		bool intersects = AreLinesIntersecting(_obstacleBounds[id.x].pointA,
 											_obstacleBounds[id.x].pointB,
-											_path[currentAgentMovementIndex].pointA,
-											_path[currentAgentMovementIndex].pointB);
+											_agentsPathLines[currentAgentMovementIndex].pointA,
+											_agentsPathLines[currentAgentMovementIndex].pointB);
 	
-	bool hasIntersected = _intersects[id.z] == 1 ? true : false;
-	_intersects[id.z] = intersects || hasIntersected ? 1 : 0;
+		bool hasIntersected = _intersects[id.z] == 1 ? true : false;
+		_intersects[id.z] = intersects || hasIntersected ? 1 : 0;
 	
-	bool improves = (_firstCollisionIndex[id.z] > id.y);
+		bool improves = (_firstCollisionIndex[id.z] > id.y);
 	
-	_firstCollisionIndex[id.z] = intersects && improves ? id.y : _firstCollisionIndex[id.z];
+		_firstCollisionIndex[id.z] = intersects && improves ? id.y : _firstCollisionIndex[id.z];
 	
-	_lastAgentPositions[id.z] = intersects && improves
+		_lastAgentPositions[id.z] = intersects && improves
 									? CalculateIntersectionPosition(_obstacleBounds[id.x].pointA, _obstacleBounds[id.x].pointB,
-																	_path[currentAgentMovementIndex].pointA, _path[currentAgentMovementIndex].pointB) 
+																	_agentsPathLines[currentAgentMovementIndex].pointA, _agentsPathLines[currentAgentMovementIndex].pointB)
 									: _lastAgentPositions[id.z];
-	
+	}
 }
 
 
