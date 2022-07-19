@@ -36,12 +36,11 @@ public class DataSimulationManager : MonoBehaviour
         intersectionChecker.CheckIntersectionCPU();
         intersectionChecker.ResetVariables();
         intersectionChecker.CheckIntersectionGPU();
-
     }
 
     public void RepresentBestSimulation()
     {
-
+        intersectionChecker.CheckIntersectionCPU();
         intersectionChecker.ResetVariables();
         intersectionChecker.CheckIntersectionGPU();
         //PopulationController populationController = FindObjectOfType<PopulationController>();
