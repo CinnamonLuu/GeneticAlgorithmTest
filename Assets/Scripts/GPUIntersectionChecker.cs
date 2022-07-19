@@ -378,6 +378,7 @@ public class GPUIntersectionChecker
 
         /*-------------------------INTERSECTION----------------------------- */
         computeShader.SetInt("numMovements", SimulationController.Instance.NumMovements);
+        computeShader.SetInt("numAgents", SimulationController.Instance.NumAgents);
 
         //every Line conforming every Obstacle
         ComputeBuffer bufferObstacleLines = new ComputeBuffer(_obstacleBounds.Length, lineSize);
